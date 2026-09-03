@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>athenahealth Attendance Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- PWA Mobile App Support -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="athenahealth Roster">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              purple: '#562386',
+              darkPurple: '#411568',
+              lightPurple: '#F5EEFC',
+              borderPurple: '#D8BFF3',
+              green: '#8CC63F',
+              darkGreen: '#74A731',
+              lightGreen: '#F0F9E8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    @media print {
+      nav, header, button, .no-print { display: none !important; }
+      body { background: white; padding: 0; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-16">
+
+  <!-- Persistent Header with Gear Settings Icon & Vector Wordmark -->
+  <header class="bg-brand-purple text-white shadow-md sticky top-0 z-40 border-b border-brand-darkPurple">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div>
+        <h1 class="text-base sm:text-lg font-bold tracking-tight">Attendance & Allowance Tracker</h1>
+        <p class="text-xs text-purple-200">Team Roster & Operations Portal</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Settings Gear Button (Visible only when logged in) -->
+        <button id="headerSettingsBtn" onclick="openSettingsModal()" title="System Configuration" class="hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition border border-white/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+
+        <!-- Exact Official athenahealth Vector Logo -->
+        <div class="flex items-center">
+          <svg class="h-7 sm:h-8 w-auto" viewBox="0 0 340 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(0, 5)">
+              <path d="M18.8 45.4C18.8 30.1 27.5 15.6 30 11C32.5 15.6 41.2 30.1 41.2 45.4C41.2 56.4 34.3 61.2 30 61.2C25.7 61.2 18.8 56.4 18.8 45.4Z" fill="#8CC63F" transform="rotate(-30 30 36)"/>
+              <path d="M18.8 45.4C18.8 30.1 27.5 15.6 30 11C32.5 15.6 41.2 30.1 41.2 45.4C41.2 56.4 34.3 61.2 30 61.2C25.7 61.2 18.8 56.4 18.8 45.4Z" fill="#8CC63F" transform="rotate(30 30 36) scale(0.9) translate(6, -2)"/>
+              <path d="M22 42C22 30 28 18 30 14C32 18 38 30 38 42C38 50 33.5 54 30 54C26.5 54 22 50 22 42Z" fill="#A3D95B"/>
+              <circle cx="37" cy="27" r="3.2" fill="#8CC63F"/>
+              <rect x="28.5" y="44" width="3" height="22" rx="1.5" fill="#8CC63F"/>
+            </g>
+            <text x="72" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="39" font-weight="400" fill="#FFFFFF" letter-spacing="-1.2">athena<tspan font-weight="300">health</tspan></text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-4xl mx-auto p-3 sm:p-4">
+
+    <!-- LOGIN & AUTHENTICATION SCREEN -->
+    <section id="authScreen" class="py-8">
+      <div class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
+        <div class="bg-brand-purple p-6 text-center text-white">
+          <h2 class="text-base font-bold">Team Member Portal</h2>
+          <p class="text-xs text-purple-200 mt-0.5">Sign in with your Employee ID and 4-Digit PIN</p>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <!-- Login View -->
+          <div id="loginForm">
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
+                <input type="text" id="loginEmpId" placeholder="e.g. 29146" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">4-Digit Numeric PIN</label>
+                <input type="password" id="loginPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+              </div>
+
+              <div id="loginErrorMsg" class="hidden text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-200 p-2.5 rounded-lg"></div>
+
+              <button onclick="handleLoginSubmit()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white py-2.5 rounded-lg font-semibold text-sm transition shadow-sm">
+                Log In
+              </button>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2 text-center text-xs">
+              <button onclick="showSetPinForm()" class="text-brand-purple font-semibold hover:underline">
+                First Time Logging In? Set Your 4-Digit PIN
+              </button>
+              <button onclick="showForgotPinForm()" class="text-slate-500 hover:text-brand-purple underline">
+                Forgot Password / PIN?
+              </button>
+            </div>
+          </div>
+
+          <!-- First Time PIN Setup View -->
+          <div id="setPinForm" class="hidden space-y-3">
+            <h3 class="text-xs font-bold uppercase text-brand-purple tracking-wider">Set Initial 4-Digit PIN</h3>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
+              <input type="text" id="setPinEmpId" placeholder="e.g. 29146" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Full Employee Name</label>
+              <input type="text" id="setPinName" placeholder="e.g. Sridhar" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Select Cohort</label>
+              <select id="setPinCohort" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-purple"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Create 4-Digit Numeric PIN</label>
+              <input type="password" id="newPin" maxlength="4" placeholder="e.g. 1234" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Confirm 4-Digit PIN</label>
+              <input type="password" id="confirmNewPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div id="setPinMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+            <div class="flex gap-2 pt-1">
+              <button onclick="saveInitialPin()" class="w-full bg-brand-green hover:bg-brand-darkGreen text-white py-2 rounded-lg font-semibold text-xs transition shadow-sm">Save & Set PIN</button>
+              <button onclick="showLoginForm()" class="w-full bg-slate-100 text-slate-600 py-2 rounded-lg font-semibold text-xs">Back to Login</button>
+            </div>
+          </div>
+
+          <!-- Forgot Password View -->
+          <div id="forgotPinForm" class="hidden space-y-3">
+            <h3 class="text-xs font-bold uppercase text-brand-purple tracking-wider">Reset 4-Digit PIN</h3>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
+              <input type="text" id="resetEmpId" placeholder="Emp ID" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Full Employee Name</label>
+              <input type="text" id="resetEmpName" placeholder="Full name registered on roster" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">New 4-Digit Numeric PIN</label>
+              <input type="password" id="resetNewPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+            </div>
+            <div id="resetPinMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+            <div class="flex gap-2 pt-1">
+              <button onclick="handleResetPinSubmit()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white py-2 rounded-lg font-semibold text-xs transition shadow-sm">Reset PIN</button>
+              <button onclick="showLoginForm()" class="w-full bg-slate-100 text-slate-600 py-2 rounded-lg font-semibold text-xs">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN APP INTERFACE (LOCKED UNTIL AUTHENTICATED) -->
+    <div id="appContainer" class="hidden space-y-4">
+      
+      <!-- User Status Banner -->
+      <div class="bg-white rounded-xl p-3 shadow-sm border border-purple-100 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-green animate-pulse"></span>
+          <span class="text-xs text-slate-500">Active User: <strong class="text-brand-purple" id="loggedInUserLabel">--</strong></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="activeTeamBadge" class="bg-brand-lightPurple text-brand-purple text-xs px-3 py-1 rounded-lg border border-brand-borderPurple font-semibold">No Team Selected</span>
+          <button onclick="handleLogout()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">Logout</button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex border-b border-purple-100 bg-white rounded-xl shadow-sm p-1 overflow-x-auto">
+        <button id="tabTeamsBtn" onclick="switchTab('teams')" class="flex-1 min-w-[70px] py-2 text-center text-xs font-semibold rounded-lg text-brand-purple bg-brand-lightPurple transition">
+          1. Teams
+        </button>
+        <button id="tabMembersBtn" onclick="switchTab('members')" class="flex-1 min-w-[80px] py-2 text-center text-xs font-medium rounded-lg text-slate-500 hover:text-slate-700 transition">
+          2. Members
+        </button>
+        <button id="tabCalendarBtn" onclick="switchTab('calendar')" class="flex-1 min-w-[100px] py-2 text-center text-xs font-medium rounded-lg text-slate-500 hover:text-slate-700 transition">
+          3. Member View
+        </button>
+        <button id="tabTeamRosterBtn" onclick="switchTab('teamRoster')" class="flex-1 min-w-[110px] py-2 text-center text-xs font-medium rounded-lg text-slate-500 hover:text-slate-700 transition">
+          4. Team Roster & Finance
+        </button>
+      </nav>
+
+      <!-- TAB 1: TEAMS -->
+      <section id="viewTeams" class="space-y-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50">
+          <h2 class="text-sm font-semibold text-brand-purple uppercase tracking-wide mb-3">Create New Team</h2>
+          <div class="flex gap-2">
+            <input type="text" id="newTeamInput" placeholder="e.g. Integration Analysts" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
+            <button onclick="createTeam()" class="bg-brand-purple hover:bg-brand-darkPurple text-white px-4 py-2 text-sm rounded-lg font-medium whitespace-nowrap shadow-sm">Add Team</button>
+          </div>
+        </div>
+
+        <div class="space-y-2" id="teamsListContainer"></div>
+      </section>
+
+      <!-- TAB 2: MEMBERS -->
+      <section id="viewMembers" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50 flex items-center justify-between">
+          <div>
+            <span class="text-xs text-slate-400 font-semibold uppercase">Selected Team</span>
+            <h2 class="text-base font-bold text-brand-purple" id="currentTeamTitle">Select a Team</h2>
+          </div>
+          <button onclick="switchTab('teams')" class="text-xs text-brand-purple font-medium hover:underline">&larr; Change Team</button>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50 space-y-3">
+          <h3 class="text-sm font-semibold text-slate-700">Add Team Member</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="newEmpId" placeholder="Emp ID (e.g. 29146)" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
+            <input type="text" id="newMemberName" placeholder="Employee Full Name" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">Cohort</label>
+              <select id="newMemberCohort" class="border rounded-lg px-3 py-2 text-sm w-full bg-white outline-none focus:ring-1 focus:ring-brand-purple"></select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">Default Shift</label>
+              <select id="newMemberShift" class="border rounded-lg px-3 py-2 text-sm w-full bg-white outline-none focus:ring-1 focus:ring-brand-purple"></select>
+            </div>
+          </div>
+          <button onclick="addMember()" class="w-full bg-brand-green hover:bg-brand-darkGreen text-white py-2 text-sm rounded-lg font-medium shadow-sm transition">Add Team Member</button>
+        </div>
+
+        <div class="space-y-2" id="membersListContainer"></div>
+      </section>
+
+      <!-- TAB 3: MEMBER CALENDAR VIEW -->
+      <section id="viewCalendar" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-purple-50 pb-3">
+            <div>
+              <span class="text-xs text-brand-purple font-semibold uppercase tracking-wider" id="calTeamSubtitle">TEAM</span>
+              <h2 class="text-lg sm:text-xl font-bold text-slate-800" id="calMemberName">Select Member</h2>
+              <p class="text-xs text-slate-500" id="calMemberMeta"></p>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <label for="memberDropdownSelect" class="text-xs font-semibold text-slate-600 whitespace-nowrap">Switch Member:</label>
+              <select id="memberDropdownSelect" onchange="onMemberDropdownChange(this.value)" class="bg-brand-lightPurple border border-brand-borderPurple text-brand-purple text-xs font-semibold rounded-lg px-3 py-2 outline-none w-full sm:w-64 focus:ring-2 focus:ring-brand-purple">
+              </select>
+              <button onclick="switchTab('members')" class="text-xs text-brand-purple hover:underline font-medium whitespace-nowrap pl-1">&larr; Members</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Shift Buttons for Monthly Override -->
+          <div class="bg-brand-lightPurple/60 border border-brand-borderPurple/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="text-xs font-bold text-brand-purple block">Default Shift for <span id="currentShiftMonthLabel"></span>:</span>
+              <p class="text-[11px] text-slate-500">Click a shift below to apply it as this member's default for this month.</p>
+            </div>
+            <div class="inline-flex rounded-lg border border-brand-borderPurple bg-white p-1 gap-1 flex-wrap" id="monthShiftButtonsContainer"></div>
+          </div>
+        </div>
+
+        <!-- Calendar Controls -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <div class="flex items-center gap-2">
+              <button onclick="navigateMonth(-1)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold">&larr; Prev</button>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800" id="calendarMonthYear"></h3>
+              <button onclick="navigateMonth(1)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold">Next &rarr;</button>
+            </div>
+
+            <div class="flex items-center gap-2 bg-purple-50/50 p-1.5 rounded-xl border border-purple-100">
+              <button type="button" id="bulkToggleBtn" onclick="toggleBulkMode()" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-brand-purple border border-brand-borderPurple shadow-sm transition">
+                &#x2611; Multi-Day Select: OFF
+              </button>
+            </div>
+          </div>
+
+          <!-- Bulk Actions Bar -->
+          <div id="bulkActionBar" class="hidden bg-brand-purple text-white p-3 rounded-xl mb-3 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs shadow-md">
+            <div>
+              <span class="font-bold" id="selectedCountBadge">0 days selected</span>
+              <p class="text-[10px] text-purple-200">Click calendar dates to select/deselect them.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="applyBulkStatus('WFO')" class="bg-brand-green hover:bg-brand-darkGreen font-semibold px-3 py-1.5 rounded-lg shadow">Mark WFO</button>
+              <button onclick="applyBulkStatus('WFH')" class="bg-blue-600 hover:bg-blue-700 font-semibold px-3 py-1.5 rounded-lg shadow">Mark WFH</button>
+              <button onclick="applyBulkStatus('Leave')" class="bg-rose-600 hover:bg-rose-700 font-semibold px-3 py-1.5 rounded-lg shadow">Mark Leave</button>
+              <button onclick="clearBulkSelection()" class="bg-brand-darkPurple hover:bg-black px-2.5 py-1.5 rounded-lg">Clear</button>
+            </div>
+          </div>
+
+          <div class="calendar-grid text-center font-semibold text-xs text-slate-400 mb-2">
+            <div class="text-rose-500">Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div class="text-rose-500">Sat</div>
+          </div>
+          <div id="calendarDaysGrid" class="calendar-grid gap-1"></div>
+        </div>
+
+        <!-- Member Consolidated Summary -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-purple-50 space-y-4">
+          <h3 class="text-sm font-bold text-brand-purple uppercase tracking-wide border-b border-purple-50 pb-2">
+            Member Monthly Summary (<span id="summaryMonthLabel"></span>)
+          </h3>
+
+          <div class="bg-brand-lightPurple/70 border border-brand-borderPurple/50 rounded-xl p-3.5 flex justify-between items-center">
+            <div>
+              <p class="text-xs text-brand-purple font-bold">Earned Shift Allowance</p>
+              <p class="text-[11px] text-slate-500">Calculated automatically from your custom shifts and rates</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xl font-bold text-brand-purple" id="totalAllowanceDisplay">₹0</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Shift Counts Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs" id="summaryDynamicShiftsGrid"></div>
+
+          <div class="border-t border-purple-50 pt-3 space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-600">Permissions (2 hrs each):</span>
+              <span class="font-bold text-amber-700" id="totalPermissionsDisplay">0</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-500 pl-2">
+              <span>&bull; Penalty applied (2 permissions = 0.5 leave):</span>
+              <span class="font-medium text-slate-700" id="permissionPenaltyDisplay">0 Days</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-dashed border-slate-200 pt-2">
+              <span class="font-bold text-slate-800 text-sm">Total Effective Leaves:</span>
+              <span class="font-bold text-rose-600 text-sm" id="grandTotalLeavesDisplay">0 Days</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TEAM CALENDAR & CONSOLIDATED FINANCE REPORT -->
+      <section id="viewTeamRoster" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+            <div>
+              <h2 class="text-base font-bold text-brand-purple">Team Calendar Roster</h2>
+              <p class="text-xs text-slate-500">Status overview of all team members</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="navigateTeamMonth(-1)" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-bold">&larr; Prev</button>
+              <span class="text-xs font-bold text-brand-purple" id="teamCalendarMonthYear"></span>
+              <button onclick="navigateTeamMonth(1)" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-bold">Next &rarr;</button>
+            </div>
+          </div>
+
+          <div class="calendar-grid text-center font-semibold text-xs text-slate-400 mb-2">
+            <div class="text-rose-500">Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div class="text-rose-500">Sat</div>
+          </div>
+          <div id="teamCalendarGrid" class="calendar-grid gap-1"></div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-50 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-purple-50 pb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Finance Shift Allowance Report</h3>
+              <p class="text-xs text-slate-500">Billing Cycle: <strong class="text-brand-purple" id="cycleRangeLabel">21st Prev Month - 20th Current Month</strong></p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="cycleSelector" onchange="renderTeamFinanceReport()" class="text-xs border border-slate-200 rounded-lg p-1.5 outline-none bg-white">
+                <option value="finance">Finance Cycle (21st to 20th)</option>
+                <option value="calendar">Calendar Month (1st to 30/31st)</option>
+              </select>
+              <button onclick="exportFinanceCSV()" class="bg-brand-green hover:bg-brand-darkGreen text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-sm">
+                &darr; Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs border-collapse" id="financeTable">
+              <thead>
+                <tr class="bg-brand-lightPurple text-brand-purple font-bold border-b border-brand-borderPurple">
+                  <th class="p-2 border-r border-purple-200">Emp ID</th>
+                  <th class="p-2 border-r border-purple-200">Employee Name</th>
+                  <th class="p-2 border-r border-purple-200 text-center">Number of Shift Days</th>
+                  <th class="p-2 border-r border-purple-200">Shift Criteria</th>
+                  <th class="p-2 border-r border-purple-200 text-center">Shift Start time</th>
+                  <th class="p-2 border-r border-purple-200 text-center">Shift End time</th>
+                  <th class="p-2">Cohort</th>
+                </tr>
+              </thead>
+              <tbody id="financeTableBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- UNIFIED SETTINGS MODAL (GEAR ICON) -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="flex justify-between items-center border-b border-purple-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="p-2 bg-brand-lightPurple text-brand-purple rounded-xl">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">System Configuration</h3>
+            <p class="text-[11px] text-slate-500">Manage custom Cohorts, Shift Timings & Allowance Rates</p>
+          </div>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <!-- Settings Tabs Header -->
+      <div class="flex border-b border-slate-200 gap-4 text-xs font-semibold">
+        <button id="settingsTabCohortsBtn" onclick="switchSettingsTab('cohorts')" class="pb-2 border-b-2 border-brand-purple text-brand-purple">
+          Cohort Roles
+        </button>
+        <button id="settingsTabShiftsBtn" onclick="switchSettingsTab('shifts')" class="pb-2 text-slate-500 hover:text-slate-700">
+          Shifts & Allowances
+        </button>
+      </div>
+
+      <!-- 1. Cohorts Setting Panel -->
+      <div id="settingsPanelCohorts" class="space-y-3">
+        <div class="flex gap-2">
+          <input type="text" id="newCohortInput" placeholder="Add Cohort (e.g. Lead Analyst, Trainee)" class="border rounded-lg px-3 py-2 text-xs w-full outline-none focus:ring-2 focus:ring-brand-purple">
+          <button onclick="addNewCohort()" class="bg-brand-purple hover:bg-brand-darkPurple text-white px-4 py-2 text-xs rounded-lg font-semibold whitespace-nowrap">+ Add</button>
+        </div>
+        <div class="border rounded-xl p-3 bg-slate-50 space-y-2">
+          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Active Cohort Roles:</span>
+          <div class="flex flex-wrap gap-1.5" id="cohortsBadgeContainer"></div>
+        </div>
+      </div>
+
+      <!-- 2. Shifts & Allowance Setting Panel -->
+      <div id="settingsPanelShifts" class="hidden space-y-4">
+        <!-- Add New Shift Form -->
+        <div class="bg-brand-lightPurple/40 border border-brand-borderPurple/60 p-3.5 rounded-xl space-y-3">
+          <h4 class="text-xs font-bold text-brand-purple uppercase tracking-wider">Add Custom Shift</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Shift Name</label>
+              <input type="text" id="newShiftName" placeholder="e.g. General Shift, Night Shift" class="w-full border rounded-lg p-2 outline-none">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Allowance Rate (₹ / Day)</label>
+              <input type="number" id="newShiftAllowance" placeholder="e.g. 600" class="w-full border rounded-lg p-2 outline-none">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Start Time (HH:MM AM/PM)</label>
+              <input type="text" id="newShiftStart" placeholder="e.g. 09:30 AM" class="w-full border rounded-lg p-2 outline-none">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">End Time (HH:MM AM/PM)</label>
+              <input type="text" id="newShiftEnd" placeholder="e.g. 06:30 PM" class="w-full border rounded-lg p-2 outline-none">
+            </div>
+          </div>
+          <button onclick="addNewShiftConfig()" class="w-full bg-brand-green hover:bg-brand-darkGreen text-white py-2 rounded-lg font-semibold text-xs transition">
+            Save Shift Configuration
+          </button>
+        </div>
+
+        <!-- Current Shifts List -->
+        <div class="space-y-2">
+          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Configured Shift Types:</span>
+          <div class="space-y-2" id="configuredShiftsList"></div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 flex justify-end">
+        <button onclick="closeSettingsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-semibold">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT TEAM NAME MODAL -->
+  <div id="editTeamModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base">Rename Team</h3>
+        <button onclick="closeEditTeamModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+      <input type="hidden" id="editTeamId">
+      <div>
+        <label class="block font-semibold text-slate-600 mb-1 text-xs">Team Name</label>
+        <input type="text" id="editTeamNameInput" class="border rounded-lg px-3 py-2 w-full outline-none focus:ring-2 focus:ring-brand-purple text-sm">
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveEditedTeamName()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white font-medium py-2 rounded-lg text-xs shadow-sm">Save Changes</button>
+        <button onclick="closeEditTeamModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg text-xs">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MEMBER DETAILS MODAL -->
+  <div id="editMemberModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base">Edit Member Details</h3>
+        <button onclick="closeEditMemberModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <input type="hidden" id="editMemberId">
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">Emp ID</label>
+          <input type="text" id="editEmpId" class="border rounded-lg px-3 py-2 w-full outline-none focus:ring-2 focus:ring-brand-purple text-sm">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">Employee Name</label>
+          <input type="text" id="editMemberName" class="border rounded-lg px-3 py-2 w-full outline-none focus:ring-2 focus:ring-brand-purple text-sm">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">Cohort</label>
+          <select id="editMemberCohort" class="border rounded-lg px-3 py-2 w-full bg-white outline-none text-sm"></select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">Default Shift</label>
+          <select id="editMemberShift" class="border rounded-lg px-3 py-2 w-full bg-white outline-none text-sm"></select>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveEditedMember()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white font-medium py-2.5 rounded-lg text-xs shadow-sm">Update Member</button>
+        <button onclick="closeEditMemberModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2.5 rounded-lg text-xs">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SINGLE DAY EDIT MODAL (TAB 3) -->
+  <div id="attendanceModal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-start border-b pb-2">
+        <div>
+          <h3 class="font-bold text-slate-800" id="modalDayTitle">Update Day Record</h3>
+          <p class="text-xs text-slate-500" id="modalDaySubtitle"></p>
+          <p class="text-xs font-semibold text-brand-purple mt-1" id="modalHolidayNotice"></p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-sm">
+        <div class="bg-brand-lightPurple/40 p-3 rounded-xl border border-brand-borderPurple/50 space-y-2">
+          <label class="block text-xs font-bold text-brand-purple">Shift Worked On This Day</label>
+          <div class="grid grid-cols-2 gap-2" id="modalDynamicShiftButtons"></div>
+        </div>
+
+        <div>
+          <label class="block font-medium mb-1">Attendance Status</label>
+          <select id="modalStatusSelect" onchange="handleModalStatusChange()" class="w-full border rounded-lg p-2.5 outline-none bg-white">
+            <option value="DEFAULT">Default (Auto-Off for Weekend/Holiday or WFO)</option>
+            <option value="WFO">WFO (Work From Office - Shift Allowance)</option>
+            <option value="WFH" id="modalWfhOption">WFH (Work From Home - Shift Allowance)</option>
+            <option value="Leave">Leave</option>
+            <option value="Permission">Permission (2 Hours)</option>
+          </select>
+          <p class="text-[11px] text-brand-green mt-1 hidden font-medium" id="compOffAlert">
+            &#9733; Working on this weekend/AHI holiday earns <strong>Shift Allowance + 1 Comp Off Leave</strong>!
+          </p>
+        </div>
+
+        <div id="modalLeaveSection" class="hidden space-y-2">
+          <label class="block font-medium">Leave Type</label>
+          <select id="modalLeaveCategory" class="w-full border rounded-lg p-2.5 outline-none bg-white">
+            <option value="Casual Leave">Casual Leave</option>
+            <option value="Sick Leave">Sick Leave</option>
+            <option value="Privileged Leave">Privileged Leave</option>
+            <option value="Compensatory Leave">Compensatory Leave (Comp Off Availed)</option>
+          </select>
+
+          <label class="block font-medium pt-1">Leave Duration</label>
+          <select id="modalLeaveDuration" class="w-full border rounded-lg p-2.5 outline-none bg-white">
+            <option value="Full Day">Full Day</option>
+            <option value="First Half">First Half Leave</option>
+            <option value="Second Half">Second Half Leave (Shift Allowance: ₹0)</option>
+          </select>
+        </div>
+
+        <div id="modalPermissionSection" class="hidden space-y-2">
+          <label class="block font-medium">Permission Slot (2 Hours)</label>
+          <select id="modalPermissionSlot" class="w-full border rounded-lg p-2.5 outline-none bg-white">
+            <option value="First Half">First Half</option>
+            <option value="Second Half">Second Half</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveModalAttendance()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white font-medium py-2.5 rounded-lg shadow-sm">Save Record</button>
+        <button onclick="closeModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2.5 rounded-lg">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM DAY DETAILS MODAL (TAB 4) -->
+  <div id="teamDayModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-lg p-5 space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex justify-between items-start border-b pb-2">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base" id="teamDayModalTitle">Team Status for Date</h3>
+          <p class="text-xs text-slate-500" id="teamDayModalSubtitle"></p>
+        </div>
+        <button onclick="closeTeamDayModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+      <div class="overflow-y-auto flex-1 space-y-2" id="teamDayModalContent"></div>
+      <button onclick="closeTeamDayModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg text-xs">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const AHI_HOLIDAYS_2026 = {
+      "2026-01-01": "New Year's Day",
+      "2026-01-15": "Pongal",
+      "2026-01-26": "Republic Day",
+      "2026-04-14": "Tamil New Year's Day",
+      "2026-05-01": "May Day",
+      "2026-05-28": "Bakrid",
+      "2026-09-14": "Vinayakar Chaturthi",
+      "2026-10-02": "Gandhi Jayanthi",
+      "2026-10-20": "Vijaya Dasami",
+      "2026-11-09": "Deepavali (Observed)",
+      "2026-12-25": "Christmas"
+    };
+
+    const US_HOLIDAYS_2026 = {
+      "2026-01-01": "New Year's Day",
+      "2026-01-19": "MLK Day",
+      "2026-02-16": "Presidents' Day",
+      "2026-05-25": "Memorial Day",
+      "2026-06-19": "Juneteenth",
+      "2026-07-03": "Independence Day (Observed)",
+      "2026-09-07": "US Labor Day",
+      "2026-10-12": "Columbus / Indigenous Peoples' Day",
+      "2026-11-11": "Veterans Day",
+      "2026-11-26": "Thanksgiving Day",
+      "2026-12-25": "Christmas Day"
+    };
+
+    // Default System State with Dynamic Shifts & Cohorts
+    let db = {
+      teams: [
+        { id: "team_1", name: "Public Health", members: [] }
+      ],
+      cohorts: ["Associate", "Analyst", "Senior Analyst", "Manager"],
+      shifts: [
+        { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
+        { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
+      ],
+      monthlyRosters: {},
+      records: {},
+      auth: {}
+    };
+
+    let selectedTeamId = null;
+    let selectedMemberId = null;
+    let viewingDate = new Date(2026, 8, 1);
+    let modalSelectedDateStr = null;
+    let modalSelectedShift = "Evening Shift";
+
+    let isBulkMode = false;
+    let selectedDatesSet = new Set();
+    let currentUser = null;
+
+    // Local Storage Loading
+    const LOCAL_KEY = 'athena_attendance_v7_data';
+    const localSaved = localStorage.getItem(LOCAL_KEY);
+    if (localSaved) {
+      try {
+        db = JSON.parse(localSaved);
+        if (!db.cohorts) db.cohorts = ["Associate", "Analyst", "Senior Analyst", "Manager"];
+        if (!db.shifts) {
+          db.shifts = [
+            { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
+            { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
+          ];
+        }
+        if (!db.auth) db.auth = {};
+      } catch (e) {
+        console.error("Local load error", e);
+      }
+    }
+
+    // Optional Firebase Setup
+    let dbRef = null;
+    try {
+      const firebaseConfig = {
+        databaseURL: "https://athena-roster-6aac5-default-rtdb.firebaseio.com",
+        projectId: "athena-roster-6aac5",
+        storageBucket: "athena-roster-6aac5.firebasestorage.app"
+      };
+      if (firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("YOUR_")) {
+        firebase.initializeApp(firebaseConfig);
+        dbRef = firebase.database().ref("athena_attendance_database");
+        dbRef.on("value", (snapshot) => {
+          const cloudData = snapshot.val();
+          if (cloudData) {
+            db = cloudData;
+            if (!db.cohorts) db.cohorts = ["Associate", "Analyst", "Senior Analyst", "Manager"];
+            if (!db.shifts) {
+              db.shifts = [
+                { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
+                { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
+              ];
+            }
+            if (!db.auth) db.auth = {};
+            localStorage.setItem(LOCAL_KEY, JSON.stringify(db));
+            populateAllDropdowns();
+            renderCohorts();
+            renderShiftsConfigList();
+            refreshCurrentViews();
+          }
+        });
+      }
+    } catch (err) {
+      console.log("Firebase optional sync.", err);
+    }
+
+    function saveDB() {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(db));
+      if (dbRef) {
+        try { dbRef.set(db); } catch (e) { console.error(e); }
+      }
+    }
+
+    // Helper to find shift rate and details
+    function getShiftMeta(shiftName) {
+      if (!db.shifts) return { allowance: 550, start: "3:30 PM", end: "12:30 AM" };
+      const found = db.shifts.find(s => s.name === shiftName);
+      return found || db.shifts[0] || { allowance: 550, start: "3:30 PM", end: "12:30 AM" };
+    }
+
+    // ==========================================
+    // UNIFIED GEAR SETTINGS MODAL
+    // ==========================================
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('hidden');
+      switchSettingsTab('cohorts');
+      renderCohorts();
+      renderShiftsConfigList();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+      populateAllDropdowns();
+      refreshCurrentViews();
+    }
+
+    function switchSettingsTab(tab) {
+      const panelCohorts = document.getElementById('settingsPanelCohorts');
+      const panelShifts = document.getElementById('settingsPanelShifts');
+      const btnCohorts = document.getElementById('settingsTabCohortsBtn');
+      const btnShifts = document.getElementById('settingsTabShiftsBtn');
+
+      if (tab === 'cohorts') {
+        panelCohorts.classList.remove('hidden');
+        panelShifts.classList.add('hidden');
+        btnCohorts.className = "pb-2 border-b-2 border-brand-purple text-brand-purple";
+        btnShifts.className = "pb-2 text-slate-500 hover:text-slate-700";
+      } else {
+        panelCohorts.classList.add('hidden');
+        panelShifts.classList.remove('hidden');
+        btnCohorts.className = "pb-2 text-slate-500 hover:text-slate-700";
+        btnShifts.className = "pb-2 border-b-2 border-brand-purple text-brand-purple";
+      }
+    }
+
+    // Cohorts management inside Settings
+    function renderCohorts() {
+      const container = document.getElementById('cohortsBadgeContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!db.cohorts) db.cohorts = ["Associate", "Analyst", "Senior Analyst", "Manager"];
+
+      db.cohorts.forEach((cohort, idx) => {
+        const badge = document.createElement('span');
+        badge.className = "inline-flex items-center gap-1.5 bg-white text-brand-purple text-xs px-2.5 py-1 rounded-lg border border-purple-200 font-semibold shadow-sm";
+        badge.innerHTML = `
+          ${cohort}
+          <button onclick="removeCohort(${idx})" class="text-slate-400 hover:text-rose-600 font-bold ml-1">&times;</button>
+        `;
+        container.appendChild(badge);
+      });
+      populateAllDropdowns();
+    }
+
+    function addNewCohort() {
+      const input = document.getElementById('newCohortInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!db.cohorts) db.cohorts = [];
+      if (!db.cohorts.includes(val)) {
+        db.cohorts.push(val);
+        saveDB();
+        input.value = '';
+        renderCohorts();
+      } else {
+        alert("Cohort already exists.");
+      }
+    }
+
+    function removeCohort(index) {
+      if (db.cohorts.length <= 1) {
+        alert("At least one cohort role must remain.");
+        return;
+      }
+      if (confirm(`Remove cohort '${db.cohorts[index]}'?`)) {
+        db.cohorts.splice(index, 1);
+        saveDB();
+        renderCohorts();
+      }
+    }
+
+    // Shifts & Allowance Rate Management inside Settings
+    function renderShiftsConfigList() {
+      const container = document.getElementById('configuredShiftsList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!db.shifts) {
+        db.shifts = [
+          { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
+          { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
+        ];
+      }
+
+      db.shifts.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = "p-3 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs";
+        item.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2">
+              <strong class="text-slate-800 text-sm">${s.name}</strong>
+              <span class="bg-brand-lightGreen text-brand-darkGreen px-2 py-0.5 rounded-full font-bold border border-brand-green/20">₹${s.allowance}/day</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Timing: <strong>${s.start}</strong> to <strong>${s.end}</strong></p>
+          </div>
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <button onclick="editShiftRate(${idx})" class="text-brand-purple hover:underline font-semibold text-[11px]">Edit Rate/Time</button>
+            <button onclick="removeShiftConfig(${idx})" class="text-slate-400 hover:text-rose-600 font-bold px-1.5 py-0.5 rounded">&times;</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+      populateAllDropdowns();
+    }
+
+    function addNewShiftConfig() {
+      const name = document.getElementById('newShiftName').value.trim();
+      const allowance = parseFloat(document.getElementById('newShiftAllowance').value);
+      const start = document.getElementById('newShiftStart').value.trim();
+      const end = document.getElementById('newShiftEnd').value.trim();
+
+      if (!name || isNaN(allowance) || !start || !end) {
+        alert("Please provide all shift fields: Name, Allowance rate, Start time, and End time.");
+        return;
+      }
+
+      if (!db.shifts) db.shifts = [];
+      const existing = db.shifts.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        existing.allowance = allowance;
+        existing.start = start;
+        existing.end = end;
+      } else {
+        db.shifts.push({ name, allowance, start, end });
+      }
+
+      saveDB();
+      document.getElementById('newShiftName').value = '';
+      document.getElementById('newShiftAllowance').value = '';
+      document.getElementById('newShiftStart').value = '';
+      document.getElementById('newShiftEnd').value = '';
+      renderShiftsConfigList();
+    }
+
+    function editShiftRate(idx) {
+      const s = db.shifts[idx];
+      const newRate = prompt(`Update allowance rate (₹) for ${s.name}:`, s.allowance);
+      if (newRate !== null && !isNaN(parseFloat(newRate))) {
+        s.allowance = parseFloat(newRate);
+        const newStart = prompt(`Update shift start time:`, s.start);
+        if (newStart) s.start = newStart;
+        const newEnd = prompt(`Update shift end time:`, s.end);
+        if (newEnd) s.end = newEnd;
+        saveDB();
+        renderShiftsConfigList();
+      }
+    }
+
+    function removeShiftConfig(idx) {
+      if (db.shifts.length <= 1) {
+        alert("You must keep at least one shift type configured.");
+        return;
+      }
+      if (confirm(`Delete shift '${db.shifts[idx].name}'?`)) {
+        db.shifts.splice(idx, 1);
+        saveDB();
+        renderShiftsConfigList();
+      }
+    }
+
+    function populateAllDropdowns() {
+      const addCohort = document.getElementById('newMemberCohort');
+      const editCohort = document.getElementById('editMemberCohort');
+      const setPinCohort = document.getElementById('setPinCohort');
+      const addShift = document.getElementById('newMemberShift');
+      const editShift = document.getElementById('editMemberShift');
+
+      if (!db.cohorts) db.cohorts = ["Associate", "Analyst", "Senior Analyst", "Manager"];
+      if (!db.shifts) {
+        db.shifts = [
+          { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
+          { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
+        ];
+      }
+
+      // Populate Cohorts
+      [addCohort, editCohort, setPinCohort].forEach(sel => {
+        if (!sel) return;
+        const curVal = sel.value;
+        sel.innerHTML = '';
+        db.cohorts.forEach(c => sel.add(new Option(c, c)));
+        if (curVal && db.cohorts.includes(curVal)) sel.value = curVal;
+      });
+
+      // Populate Shifts
+      [addShift, editShift].forEach(sel => {
+        if (!sel) return;
+        const curVal = sel.value;
+        sel.innerHTML = '';
+        db.shifts.forEach(s => {
+          sel.add(new Option(`${s.name} (${s.start} - ${s.end} | ₹${s.allowance})`, s.name));
+        });
+        if (curVal && db.shifts.some(s => s.name === curVal)) sel.value = curVal;
+      });
+    }
+
+    // ==========================================
+    // AUTHENTICATION LOGIC (Emp ID & 4-Digit PIN)
+    // ==========================================
+    function checkLocalSession() {
+      populateAllDropdowns();
+      const savedUser = sessionStorage.getItem('athena_auth_user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showAppInterface();
+      } else {
+        showAuthScreen();
+      }
+    }
+
+    function showAuthScreen() {
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('headerSettingsBtn').classList.add('hidden');
+      showLoginForm();
+    }
+
+    function showAppInterface() {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('hidden');
+      document.getElementById('headerSettingsBtn').classList.remove('hidden');
+      if (currentUser) {
+        document.getElementById('loggedInUserLabel').innerText = `${currentUser.name} (${currentUser.empId})`;
+      }
+      populateAllDropdowns();
+      renderCohorts();
+      renderShiftsConfigList();
+      refreshCurrentViews();
+    }
+
+    function showLoginForm() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('setPinForm').classList.add('hidden');
+      document.getElementById('forgotPinForm').classList.add('hidden');
+      document.getElementById('loginErrorMsg').classList.add('hidden');
+    }
+
+    function showSetPinForm() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('setPinForm').classList.remove('hidden');
+      document.getElementById('forgotPinForm').classList.add('hidden');
+      document.getElementById('setPinMsg').classList.add('hidden');
+      populateAllDropdowns();
+    }
+
+    function showForgotPinForm() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('setPinForm').classList.add('hidden');
+      document.getElementById('forgotPinForm').classList.remove('hidden');
+      document.getElementById('resetPinMsg').classList.add('hidden');
+    }
+
+    function findMemberAcrossTeams(empId) {
+      if (!db.teams) return null;
+      for (const team of db.teams) {
+        if (team.members) {
+          const match = team.members.find(m => String(m.empId).trim().toLowerCase() === String(empId).trim().toLowerCase());
+          if (match) return { member: match, team };
+        }
+      }
+      return null;
+    }
+
+    function handleLoginSubmit() {
+      const empId = document.getElementById('loginEmpId').value.trim();
+      const pin = document.getElementById('loginPin').value.trim();
+      const errorBox = document.getElementById('loginErrorMsg');
+      errorBox.classList.add('hidden');
+
+      if (!empId || !pin) {
+        errorBox.innerText = "Please enter both Employee ID and your 4-digit PIN.";
+        errorBox.classList.remove('hidden');
+        return;
+      }
+
+      if (!/^\d{4}$/.test(pin)) {
+        errorBox.innerText = "PIN must be strictly 4 numbers.";
+        errorBox.classList.remove('hidden');
+        return;
+      }
+
+      if (!db.auth) db.auth = {};
+      const storedPin = db.auth[empId];
+
+      if (!storedPin) {
+        errorBox.innerHTML = `PIN not created yet for Emp ID: <b>${empId}</b>.<br><a href="javascript:void(0)" onclick="showSetPinForm()" class="underline font-bold text-brand-purple">Click here to set your 4-digit PIN</a>`;
+        errorBox.classList.remove('hidden');
+        return;
+      }
+
+      if (storedPin !== pin) {
+        errorBox.innerText = "Incorrect 4-digit PIN. Please try again or use Forgot Password.";
+        errorBox.classList.remove('hidden');
+        return;
+      }
+
+      const lookup = findMemberAcrossTeams(empId);
+      let memberName = empId;
+      if (lookup) {
+        memberName = lookup.member.name;
+        selectedTeamId = lookup.team.id;
+        selectedMemberId = lookup.member.id;
+      } else {
+        if (db.teams && db.teams.length > 0) selectedTeamId = db.teams[0].id;
+      }
+
+      currentUser = { empId, name: memberName };
+      sessionStorage.setItem('athena_auth_user', JSON.stringify(currentUser));
+      showAppInterface();
+    }
+
+    function saveInitialPin() {
+      const empId = document.getElementById('setPinEmpId').value.trim();
+      const name = document.getElementById('setPinName').value.trim();
+      const cohort = document.getElementById('setPinCohort').value;
+      const pin = document.getElementById('newPin').value.trim();
+      const confirmPin = document.getElementById('confirmNewPin').value.trim();
+      const msgBox = document.getElementById('setPinMsg');
+
+      msgBox.className = "text-xs font-semibold p-2.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 block";
+
+      if (!empId || !name || !pin || !confirmPin) {
+        msgBox.innerText = "Please fill in all fields.";
+        return;
+      }
+
+      if (!/^\d{4}$/.test(pin)) {
+        msgBox.innerText = "PIN must be strictly 4 digits (e.g. 1234).";
+        return;
+      }
+
+      if (pin !== confirmPin) {
+        msgBox.innerText = "PINs do not match.";
+        return;
+      }
+
+      let lookup = findMemberAcrossTeams(empId);
+      if (!lookup) {
+        if (!db.teams || db.teams.length === 0) {
+          db.teams = [{ id: "team_" + Date.now(), name: "Public Health", members: [] }];
+        }
+        const targetTeam = db.teams[0];
+        const newMember = {
+          id: "mem_" + Date.now(),
+          empId,
+          name,
+          cohort: cohort || (db.cohorts[0] || "Analyst"),
+          defaultShift: db.shifts[0] ? db.shifts[0].name : "Evening Shift"
+        };
+        targetTeam.members.push(newMember);
+      } else {
+        lookup.member.name = name;
+        if (cohort) lookup.member.cohort = cohort;
+      }
+
+      if (!db.auth) db.auth = {};
+      db.auth[empId] = pin;
+      saveDB();
+
+      msgBox.className = "text-xs font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 block";
+      msgBox.innerText = "PIN set successfully! Redirecting to login...";
+      setTimeout(showLoginForm, 1000);
+    }
+
+    function handleResetPinSubmit() {
+      const empId = document.getElementById('resetEmpId').value.trim();
+      const empName = document.getElementById('resetEmpName').value.trim();
+      const newPin = document.getElementById('resetNewPin').value.trim();
+      const msgBox = document.getElementById('resetPinMsg');
+
+      msgBox.className = "text-xs font-semibold p-2.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 block";
+
+      if (!empId || !empName || !newPin) {
+        msgBox.innerText = "All fields are required.";
+        return;
+      }
+
+      if (!/^\d{4}$/.test(newPin)) {
+        msgBox.innerText = "New PIN must be strictly 4 digits.";
+        return;
+      }
+
+      const lookup = findMemberAcrossTeams(empId);
+      if (!lookup || lookup.member.name.trim().toLowerCase() !== empName.trim().toLowerCase()) {
+        msgBox.innerText = "Verification failed. Employee ID and Name do not match our roster records.";
+        return;
+      }
+
+      if (!db.auth) db.auth = {};
+      db.auth[empId] = newPin;
+      saveDB();
+
+      msgBox.className = "text-xs font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 block";
+      msgBox.innerText = "Password reset successfully! Please sign in with your new PIN.";
+      setTimeout(showLoginForm, 1200);
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      sessionStorage.removeItem('athena_auth_user');
+      showAuthScreen();
+    }
+
+    // ==========================================
+    // TAB MANAGEMENT & VIEWS
+    // ==========================================
+    function refreshCurrentViews() {
+      const curTeam = db.teams.find(t => t.id === selectedTeamId);
+      document.getElementById('activeTeamBadge').innerText = curTeam ? curTeam.name : "No Team Selected";
+
+      if (!document.getElementById('viewTeams').classList.contains('hidden')) {
+        renderTeams();
+      } else if (!document.getElementById('viewMembers').classList.contains('hidden')) {
+        renderMembers();
+      } else if (!document.getElementById('viewCalendar').classList.contains('hidden')) {
+        renderCalendarAndSummary();
+      } else if (!document.getElementById('viewTeamRoster').classList.contains('hidden')) {
+        renderTeamCalendarRoster();
+        renderTeamFinanceReport();
+      }
+    }
+
+    function switchTab(tab) {
+      const vTeams = document.getElementById('viewTeams');
+      const vMembers = document.getElementById('viewMembers');
+      const vCalendar = document.getElementById('viewCalendar');
+      const vTeamRoster = document.getElementById('viewTeamRoster');
+
+      const bTeams = document.getElementById('tabTeamsBtn');
+      const bMembers = document.getElementById('tabMembersBtn');
+      const bCalendar = document.getElementById('tabCalendarBtn');
+      const bTeamRoster = document.getElementById('tabTeamRosterBtn');
+
+      [vTeams, vMembers, vCalendar, vTeamRoster].forEach(el => el.classList.add('hidden'));
+      [bTeams, bMembers, bCalendar, bTeamRoster].forEach(el => {
+        el.className = "flex-1 min-w-[70px] py-2 text-center text-xs font-medium rounded-lg text-slate-500 hover:text-slate-700 transition";
+      });
+
+      const activeClass = "flex-1 min-w-[70px] py-2 text-center text-xs font-semibold rounded-lg text-brand-purple bg-brand-lightPurple transition";
+
+      const curTeam = db.teams.find(t => t.id === selectedTeamId);
+      document.getElementById('activeTeamBadge').innerText = curTeam ? curTeam.name : "No Team Selected";
+
+      if (tab === 'teams') {
+        vTeams.classList.remove('hidden');
+        bTeams.className = activeClass;
+        renderTeams();
+      } else if (tab === 'members') {
+        if (!selectedTeamId && db.teams.length > 0) selectedTeamId = db.teams[0].id;
+        if (!selectedTeamId) {
+          alert("Please create or select a team first.");
+          return switchTab('teams');
+        }
+        vMembers.classList.remove('hidden');
+        bMembers.className = activeClass;
+        populateAllDropdowns();
+        renderMembers();
+      } else if (tab === 'calendar') {
+        const team = db.teams.find(t => t.id === selectedTeamId);
+        if (!team || team.members.length === 0) {
+          alert("Please add at least one member to the team first.");
+          return switchTab('members');
+        }
+        if (!selectedMemberId || !team.members.some(m => m.id === selectedMemberId)) {
+          selectedMemberId = team.members[0].id;
+        }
+        vCalendar.classList.remove('hidden');
+        bCalendar.className = activeClass;
+        renderCalendarAndSummary();
+      } else if (tab === 'teamRoster') {
+        if (!selectedTeamId && db.teams.length > 0) selectedTeamId = db.teams[0].id;
+        vTeamRoster.classList.remove('hidden');
+        bTeamRoster.className = activeClass;
+        renderTeamCalendarRoster();
+        renderTeamFinanceReport();
+      }
+    }
+
+    // ==========================================
+    // TEAMS CRUD
+    // ==========================================
+    function createTeam() {
+      const input = document.getElementById('newTeamInput');
+      const name = input.value.trim();
+      if (!name) return;
+      db.teams.push({ id: "team_" + Date.now(), name, members: [] });
+      saveDB();
+      input.value = '';
+      renderTeams();
+    }
+
+    function selectTeam(teamId) {
+      selectedTeamId = teamId;
+      switchTab('members');
+    }
+
+    function openEditTeamModal(teamId, event) {
+      event.stopPropagation();
+      const team = db.teams.find(t => t.id === teamId);
+      if (!team) return;
+      document.getElementById('editTeamId').value = team.id;
+      document.getElementById('editTeamNameInput').value = team.name;
+      document.getElementById('editTeamModal').classList.remove('hidden');
+    }
+
+    function closeEditTeamModal() {
+      document.getElementById('editTeamModal').classList.add('hidden');
+    }
+
+    function saveEditedTeamName() {
+      const teamId = document.getElementById('editTeamId').value;
+      const newName = document.getElementById('editTeamNameInput').value.trim();
+      if (!newName) {
+        alert("Team name cannot be empty.");
+        return;
+      }
+      const team = db.teams.find(t => t.id === teamId);
+      if (team) {
+        team.name = newName;
+        saveDB();
+        closeEditTeamModal();
+        renderTeams();
+      }
+    }
+
+    function deleteTeam(teamId, event) {
+      event.stopPropagation();
+      if (confirm("Delete this team and its members?")) {
+        db.teams = db.teams.filter(t => t.id !== teamId);
+        if (selectedTeamId === teamId) selectedTeamId = null;
+        saveDB();
+        renderTeams();
+      }
+    }
+
+    function renderTeams() {
+      const container = document.getElementById('teamsListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      if (db.teams.length === 0) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-sm border border-purple-50">No teams created. Add your first team above.</div>`;
+        return;
+      }
+      db.teams.forEach(team => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center hover:border-brand-borderPurple cursor-pointer transition";
+        card.onclick = () => selectTeam(team.id);
+        card.innerHTML = `
+          <div>
+            <h4 class="font-bold text-slate-800">${team.name}</h4>
+            <p class="text-xs text-slate-400">${(team.members || []).length} Member(s)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openEditTeamModal('${team.id}', event)" class="text-xs font-semibold bg-slate-100 hover:bg-brand-lightPurple text-brand-purple px-2.5 py-1.5 rounded-lg border border-slate-200 transition">
+              Rename
+            </button>
+            <span class="text-xs font-semibold text-brand-purple pl-1">Open &rarr;</span>
+            <button onclick="deleteTeam('${team.id}', event)" class="text-slate-300 hover:text-rose-500 font-bold px-1.5 py-1">&times;</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // MEMBERS CRUD
+    // ==========================================
+    function addMember() {
+      const empId = document.getElementById('newEmpId').value.trim();
+      const name = document.getElementById('newMemberName').value.trim();
+      const cohort = document.getElementById('newMemberCohort').value;
+      const shift = document.getElementById('newMemberShift').value;
+
+      if (!name || !empId) {
+        alert("Please provide both Emp ID and Employee Name.");
+        return;
+      }
+
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (!team) return;
+      if (!team.members) team.members = [];
+
+      team.members.push({
+        id: "mem_" + Date.now(),
+        empId,
+        name,
+        cohort: cohort || (db.cohorts[0] || 'Analyst'),
+        defaultShift: shift || (db.shifts[0] ? db.shifts[0].name : "Evening Shift")
+      });
+
+      saveDB();
+      document.getElementById('newEmpId').value = '';
+      document.getElementById('newMemberName').value = '';
+      renderMembers();
+    }
+
+    function openEditMemberModal(memberId, event) {
+      event.stopPropagation();
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (!team) return;
+      const member = team.members.find(m => m.id === memberId);
+      if (!member) return;
+
+      populateAllDropdowns();
+      document.getElementById('editMemberId').value = member.id;
+      document.getElementById('editEmpId').value = member.empId || '';
+      document.getElementById('editMemberName').value = member.name || '';
+      document.getElementById('editMemberCohort').value = member.cohort || (db.cohorts[0] || 'Analyst');
+      document.getElementById('editMemberShift').value = member.defaultShift || (db.shifts[0] ? db.shifts[0].name : 'Evening Shift');
+
+      document.getElementById('editMemberModal').classList.remove('hidden');
+    }
+
+    function closeEditMemberModal() {
+      document.getElementById('editMemberModal').classList.add('hidden');
+    }
+
+    function saveEditedMember() {
+      const memberId = document.getElementById('editMemberId').value;
+      const empId = document.getElementById('editEmpId').value.trim();
+      const name = document.getElementById('editMemberName').value.trim();
+      const cohort = document.getElementById('editMemberCohort').value;
+      const shift = document.getElementById('editMemberShift').value;
+
+      if (!name || !empId) {
+        alert("Emp ID and Name are required.");
+        return;
+      }
+
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (!team) return;
+      const member = team.members.find(m => m.id === memberId);
+      if (!member) return;
+
+      member.empId = empId;
+      member.name = name;
+      member.cohort = cohort;
+      member.defaultShift = shift;
+
+      saveDB();
+      closeEditMemberModal();
+      renderMembers();
+    }
+
+    function selectMember(memberId) {
+      selectedMemberId = memberId;
+      switchTab('calendar');
+    }
+
+    function deleteMember(memberId, event) {
+      event.stopPropagation();
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (confirm("Remove this member?")) {
+        team.members = team.members.filter(m => m.id !== memberId);
+        if (selectedMemberId === memberId) selectedMemberId = null;
+        saveDB();
+        renderMembers();
+      }
+    }
+
+    function renderMembers() {
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      document.getElementById('currentTeamTitle').innerText = team ? team.name : "Select Team";
+
+      const container = document.getElementById('membersListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!team || !team.members || team.members.length === 0) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-sm border border-purple-50">No members in this team. Add a member above.</div>`;
+        return;
+      }
+
+      const curMonthKey = `${viewingDate.getFullYear()}-${String(viewingDate.getMonth() + 1).padStart(2, '0')}`;
+
+      team.members.forEach(member => {
+        const activeShift = getShiftForMonth(member.id, member.defaultShift, curMonthKey);
+        const shiftMeta = getShiftMeta(activeShift);
+        const allowanceRate = `₹${shiftMeta.allowance}/day`;
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center hover:border-brand-borderPurple cursor-pointer transition";
+        card.onclick = () => selectMember(member.id);
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-semibold">${member.empId || 'N/A'}</span>
+              <h4 class="font-bold text-slate-800">${member.name}</h4>
+              <span class="text-[10px] font-semibold bg-brand-lightPurple text-brand-purple px-2 py-0.5 rounded-full">${member.cohort || 'Analyst'}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">${activeShift} &bull; <span class="text-brand-purple font-medium">${allowanceRate}</span></p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openEditMemberModal('${member.id}', event)" class="text-xs font-semibold bg-slate-100 hover:bg-brand-lightPurple text-brand-purple px-2.5 py-1.5 rounded-lg transition border border-slate-200">
+              Edit
+            </button>
+            <button onclick="deleteMember('${member.id}', event)" class="text-slate-300 hover:text-rose-500 font-bold px-1.5 py-1">&times;</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // TAB 3: CALENDAR & MEMBER VIEW
+    // ==========================================
+    function isWeekend(dateKey) {
+      const d = new Date(dateKey + 'T00:00:00');
+      const day = d.getDay();
+      return day === 0 || day === 6;
+    }
+
+    function getShiftForMonth(memberId, defaultShift, monthStr) {
+      if (db.monthlyRosters && db.monthlyRosters[memberId] && db.monthlyRosters[memberId][monthStr]) {
+        return db.monthlyRosters[memberId][monthStr];
+      }
+      return defaultShift || (db.shifts[0] ? db.shifts[0].name : "Evening Shift");
+    }
+
+    function getDayShift(dateKey, memberId, defaultShift, monthStr) {
+      if (db.records && db.records[dateKey] && db.records[dateKey][memberId] && db.records[dateKey][memberId].shift) {
+        return db.records[dateKey][memberId].shift;
+      }
+      return getShiftForMonth(memberId, defaultShift, monthStr);
+    }
+
+    function toggleBulkMode() {
+      isBulkMode = !isBulkMode;
+      selectedDatesSet.clear();
+      
+      const btn = document.getElementById('bulkToggleBtn');
+      if (isBulkMode) {
+        btn.className = "text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-purple text-white shadow-sm transition";
+        btn.innerHTML = "&#x2611; Multi-Day Select: ON";
+        document.getElementById('bulkActionBar').classList.remove('hidden');
+      } else {
+        btn.className = "text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-brand-purple border border-brand-borderPurple shadow-sm transition";
+        btn.innerHTML = "&#x2611; Multi-Day Select: OFF";
+        document.getElementById('bulkActionBar').classList.add('hidden');
+      }
+      renderCalendarAndSummary();
+    }
+
+    function clearBulkSelection() {
+      selectedDatesSet.clear();
+      document.getElementById('selectedCountBadge').innerText = "0 days selected";
+      renderCalendarAndSummary();
+    }
+
+    function handleDateCellClick(dateStr, memberName, record, ahiHoliday, usHoliday, weekend, currentShift) {
+      if (isBulkMode) {
+        if (selectedDatesSet.has(dateStr)) {
+          selectedDatesSet.delete(dateStr);
+        } else {
+          selectedDatesSet.add(dateStr);
+        }
+        document.getElementById('selectedCountBadge').innerText = `${selectedDatesSet.size} days selected`;
+        renderCalendarAndSummary();
+      } else {
+        openDayModal(dateStr, memberName, record, ahiHoliday, usHoliday, weekend, currentShift);
+      }
+    }
+
+    function applyBulkStatus(status) {
+      if (selectedDatesSet.size === 0 || !selectedMemberId) {
+        alert("Please select at least one day on the calendar first.");
+        return;
+      }
+
+      const monthKey = `${viewingDate.getFullYear()}-${String(viewingDate.getMonth() + 1).padStart(2, '0')}`;
+      const defaultShift = getShiftForMonth(selectedMemberId, (db.shifts[0] ? db.shifts[0].name : "Evening Shift"), monthKey);
+
+      if (!db.records) db.records = {};
+      selectedDatesSet.forEach(dateStr => {
+        if (!db.records[dateStr]) db.records[dateStr] = {};
+        db.records[dateStr][selectedMemberId] = {
+          status: status,
+          shift: defaultShift
+        };
+      });
+
+      saveDB();
+      clearBulkSelection();
+      toggleBulkMode();
+      renderCalendarAndSummary();
+    }
+
+    function onMemberDropdownChange(memberId) {
+      selectedMemberId = memberId;
+      renderCalendarAndSummary();
+    }
+
+    function populateMemberDropdown(team, activeId) {
+      const dropdown = document.getElementById('memberDropdownSelect');
+      if (!dropdown) return;
+      dropdown.innerHTML = '';
+      if (!team || !team.members) return;
+
+      team.members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.text = `${m.name} (${m.empId || 'N/A'}) - ${m.cohort || 'Analyst'}`;
+        if (m.id === activeId) opt.selected = true;
+        dropdown.appendChild(opt);
+      });
+    }
+
+    function setMemberMonthlyShift(shiftName) {
+      if (!selectedMemberId) return;
+      const curMonthKey = `${viewingDate.getFullYear()}-${String(viewingDate.getMonth() + 1).padStart(2, '0')}`;
+      if (!db.monthlyRosters) db.monthlyRosters = {};
+      if (!db.monthlyRosters[selectedMemberId]) db.monthlyRosters[selectedMemberId] = {};
+      db.monthlyRosters[selectedMemberId][curMonthKey] = shiftName;
+      saveDB();
+      renderCalendarAndSummary();
+    }
+
+    function navigateMonth(delta) {
+      viewingDate.setMonth(viewingDate.getMonth() + delta);
+      selectedDatesSet.clear();
+      renderCalendarAndSummary();
+    }
+
+    function renderCalendarAndSummary() {
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (!team || !team.members || team.members.length === 0) return;
+
+      if (!selectedMemberId || !team.members.some(m => m.id === selectedMemberId)) {
+        selectedMemberId = team.members[0].id;
+      }
+
+      const member = team.members.find(m => m.id === selectedMemberId);
+      if (!member) return;
+
+      populateMemberDropdown(team, member.id);
+
+      const year = viewingDate.getFullYear();
+      const month = viewingDate.getMonth();
+      const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      
+      const currentMonthDefaultShift = getShiftForMonth(member.id, member.defaultShift, monthKey);
+      
+      document.getElementById('calTeamSubtitle').innerText = team.name.toUpperCase();
+      document.getElementById('calMemberName').innerText = member.name;
+      document.getElementById('calMemberMeta').innerText = `Emp ID: ${member.empId || 'N/A'} | Cohort: ${member.cohort || 'Analyst'}`;
+      document.getElementById('currentShiftMonthLabel').innerText = `${monthNames[month]} ${year}`;
+
+      // Render Dynamic Monthly Shift Selector Buttons
+      const monthShiftBtnsContainer = document.getElementById('monthShiftButtonsContainer');
+      monthShiftBtnsContainer.innerHTML = '';
+      if (!db.shifts) db.shifts = [];
+
+      db.shifts.forEach(s => {
+        const isSelected = (currentMonthDefaultShift === s.name);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => setMemberMonthlyShift(s.name);
+        btn.className = isSelected 
+          ? "px-3 py-1.5 text-xs font-semibold rounded-md bg-brand-purple text-white shadow-sm"
+          : "px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 hover:bg-slate-100";
+        btn.innerText = `${s.name} (₹${s.allowance})`;
+        monthShiftBtnsContainer.appendChild(btn);
+      });
+
+      document.getElementById('calendarMonthYear').innerText = `${monthNames[month]} ${year}`;
+      document.getElementById('summaryMonthLabel').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      const grid = document.getElementById('calendarDaysGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = "h-14 sm:h-16 bg-slate-50/50 rounded-lg";
+        grid.appendChild(empty);
+      }
+
+      let dynamicShiftCounts = {};
+      db.shifts.forEach(s => { dynamicShiftCounts[s.name] = 0; });
+
+      let countWFH = 0;
+      let countPermissions = 0;
+      let totalEarnedAllowance = 0;
+      let compOffEarned = 0;
+      let countLeaves = 0;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const weekend = isWeekend(dateKey);
+        const ahiHoliday = AHI_HOLIDAYS_2026[dateKey];
+        const usHoliday = US_HOLIDAYS_2026[dateKey];
+        const isOffDay = weekend || !!ahiHoliday;
+
+        const rawRecord = (db.records && db.records[dateKey] && db.records[dateKey][member.id]);
+        const shiftToday = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
+        const shiftMeta = getShiftMeta(shiftToday);
+        const rateToday = shiftMeta.allowance;
+
+        let effectiveStatus = "OFF";
+        if (rawRecord && rawRecord.status !== 'DEFAULT') {
+          effectiveStatus = rawRecord.status;
+        } else {
+          effectiveStatus = isOffDay ? "OFF" : "WFO";
+        }
+
+        let badgeColor = "bg-white text-slate-700 border-slate-200";
+        let badgeLabel = "";
+
+        if (effectiveStatus === 'OFF') {
+          if (ahiHoliday) {
+            badgeColor = "bg-purple-50 text-brand-purple border-purple-200";
+            badgeLabel = "AHI Off";
+          } else if (weekend) {
+            badgeColor = "bg-slate-100 text-slate-400 border-slate-200";
+            badgeLabel = "Weekend";
+          }
+        } else if (effectiveStatus === 'WFO') {
+          totalEarnedAllowance += rateToday;
+          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+          
+          badgeColor = "bg-brand-lightGreen text-brand-darkGreen border-brand-green/30";
+          badgeLabel = `WFO (${shiftToday.split(' ')[0]})`;
+          if (isOffDay) {
+            compOffEarned += 1;
+            badgeLabel += " +Comp";
+          }
+        } else if (effectiveStatus === 'WFH') {
+          countWFH++;
+          totalEarnedAllowance += rateToday;
+          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+
+          badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
+          badgeLabel = `WFH (${shiftToday.split(' ')[0]})`;
+          if (isOffDay) {
+            compOffEarned += 1;
+            badgeLabel += " +Comp";
+          }
+        } else if (effectiveStatus === 'Leave') {
+          badgeColor = "bg-rose-50 text-rose-700 border-rose-200";
+          const dur = rawRecord.leaveDuration || "Full Day";
+          countLeaves += (dur === 'Full Day' ? 1 : 0.5);
+          badgeLabel = dur === 'Full Day' ? "Leave" : `Half L (${dur === 'First Half' ? '1st' : '2nd'})`;
+          if (dur !== 'Second Half' && dur !== 'Full Day') {
+            totalEarnedAllowance += rateToday;
+            if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+            if (isOffDay) compOffEarned += 0.5;
+          }
+        } else if (effectiveStatus === 'Permission') {
+          countPermissions++;
+          totalEarnedAllowance += rateToday;
+          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+          badgeColor = "bg-amber-50 text-amber-800 border-amber-200";
+          badgeLabel = "P (2h)";
+          if (isOffDay) compOffEarned += 1;
+        }
+
+        const cell = document.createElement('div');
+        let bulkSelectedStyle = "";
+        if (isBulkMode && selectedDatesSet.has(dateKey)) {
+          bulkSelectedStyle = "ring-4 ring-brand-purple bg-brand-lightPurple border-brand-purple";
+        }
+
+        cell.className = `min-h-14 sm:min-h-16 p-1 border rounded-lg flex flex-col justify-between cursor-pointer hover:shadow transition ${badgeColor} ${bulkSelectedStyle}`;
+        cell.onclick = () => handleDateCellClick(dateKey, member.name, rawRecord, ahiHoliday, usHoliday, weekend, shiftToday);
+
+        let usIndicator = usHoliday ? `<span class="bg-amber-200 text-amber-900 text-[8px] px-1 rounded font-bold">US</span>` : '';
+        let ahiIndicator = ahiHoliday ? `<span class="bg-purple-200 text-purple-900 text-[8px] px-1 rounded font-bold truncate max-w-[36px]">AHI</span>` : '';
+
+        cell.innerHTML = `
+          <div class="flex justify-between items-center leading-tight">
+            <span class="text-xs font-bold ${weekend ? 'text-rose-500' : 'text-slate-700'}">${day}</span>
+            <div class="flex gap-0.5">${ahiIndicator}${usIndicator}</div>
+          </div>
+          <span class="text-[9px] font-semibold px-1 py-0.5 rounded truncate text-center mt-1">${badgeLabel}</span>
+        `;
+        grid.appendChild(cell);
+      }
+
+      document.getElementById('totalAllowanceDisplay').innerText = `₹${totalEarnedAllowance.toLocaleString('en-IN')}`;
+
+      // Render Dynamic Shifts Breakdown in Summary Card
+      const summaryGrid = document.getElementById('summaryDynamicShiftsGrid');
+      summaryGrid.innerHTML = '';
+
+      db.shifts.forEach(s => {
+        const item = document.createElement('div');
+        item.className = "p-2.5 bg-slate-50 rounded-lg border border-slate-100";
+        item.innerHTML = `
+          <span class="text-slate-400 block">${s.name} (₹${s.allowance})</span>
+          <span class="text-sm font-bold text-brand-purple">${dynamicShiftCounts[s.name] || 0} Days</span>
+        `;
+        summaryGrid.appendChild(item);
+      });
+
+      // WFH & Comp Off boxes
+      summaryGrid.innerHTML += `
+        <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+          <span class="text-slate-400 block">WFH Days</span>
+          <span class="text-sm font-bold text-blue-600">${countWFH} Days</span>
+        </div>
+        <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+          <span class="text-slate-400 block">Comp Off Earned</span>
+          <span class="text-sm font-bold text-brand-green">+${compOffEarned} Days</span>
+        </div>
+      `;
+
+      const penaltyLeaves = Math.floor(countPermissions / 2) * 0.5;
+      const grandTotalLeaves = countLeaves + penaltyLeaves;
+
+      document.getElementById('totalPermissionsDisplay').innerText = `${countPermissions} (${countPermissions * 2} hrs)`;
+      document.getElementById('permissionPenaltyDisplay').innerText = `+${penaltyLeaves} Day(s) Leave`;
+      document.getElementById('grandTotalLeavesDisplay').innerText = `${grandTotalLeaves} Day(s)`;
+    }
+
+    // MODAL DIALOG
+    function openDayModal(dateStr, memberName, record, ahiHoliday, usHoliday, weekend, currentShift) {
+      modalSelectedDateStr = dateStr;
+      modalSelectedShift = (record && record.shift) ? record.shift : currentShift;
+
+      document.getElementById('modalDayTitle').innerText = `${dateStr}`;
+      document.getElementById('modalDaySubtitle').innerText = `Member: ${memberName}`;
+
+      let notices = [];
+      if (ahiHoliday) notices.push(`AHI Holiday: ${ahiHoliday}`);
+      if (usHoliday) notices.push(`US Holiday: ${usHoliday}`);
+      if (weekend) notices.push(`Weekend Off`);
+      document.getElementById('modalHolidayNotice').innerHTML = notices.join(' &bull; ');
+
+      const isOff = weekend || !!ahiHoliday;
+      document.getElementById('compOffAlert').classList.toggle('hidden', !isOff);
+
+      const wfhOpt = document.getElementById('modalWfhOption');
+      if (isOff) {
+        wfhOpt.innerText = "WFH (Shift Allowance & Comp Off Earned)";
+      } else {
+        wfhOpt.innerText = "WFH (Work From Home - Shift Allowance)";
+      }
+
+      // Populate Dynamic Shift Buttons in Daily Modal
+      const modalShiftBtnsContainer = document.getElementById('modalDynamicShiftButtons');
+      modalShiftBtnsContainer.innerHTML = '';
+      if (!db.shifts) db.shifts = [];
+
+      db.shifts.forEach(s => {
+        const isSelected = (modalSelectedShift === s.name);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => setModalShift(s.name);
+        btn.className = isSelected 
+          ? "py-2 px-2 text-xs font-semibold rounded-lg border-2 border-brand-purple bg-brand-lightPurple text-brand-purple shadow-sm"
+          : "py-2 px-2 text-xs font-semibold rounded-lg border border-slate-300 bg-white text-slate-600";
+        btn.innerHTML = `${s.name}<br><span class="text-[10px] text-slate-400">₹${s.allowance}/day (${s.start})</span>`;
+        modalShiftBtnsContainer.appendChild(btn);
+      });
+
+      const status = record ? record.status : "DEFAULT";
+      document.getElementById('modalStatusSelect').value = status;
+      if (record && record.leaveCategory) document.getElementById('modalLeaveCategory').value = record.leaveCategory;
+      if (record && record.leaveDuration) document.getElementById('modalLeaveDuration').value = record.leaveDuration;
+      if (record && record.permissionSlot) document.getElementById('modalPermissionSlot').value = record.permissionSlot;
+
+      handleModalStatusChange();
+      document.getElementById('attendanceModal').classList.remove('hidden');
+    }
+
+    function setModalShift(shiftName) {
+      modalSelectedShift = shiftName;
+      const buttons = document.getElementById('modalDynamicShiftButtons').querySelectorAll('button');
+      db.shifts.forEach((s, idx) => {
+        if (buttons[idx]) {
+          buttons[idx].className = (s.name === shiftName)
+            ? "py-2 px-2 text-xs font-semibold rounded-lg border-2 border-brand-purple bg-brand-lightPurple text-brand-purple shadow-sm"
+            : "py-2 px-2 text-xs font-semibold rounded-lg border border-slate-300 bg-white text-slate-600";
+        }
+      });
+    }
+
+    function closeModal() {
+      document.getElementById('attendanceModal').classList.add('hidden');
+      modalSelectedDateStr = null;
+    }
+
+    function handleModalStatusChange() {
+      const val = document.getElementById('modalStatusSelect').value;
+      document.getElementById('modalLeaveSection').classList.toggle('hidden', val !== 'Leave');
+      document.getElementById('modalPermissionSection').classList.toggle('hidden', val !== 'Permission');
+    }
+
+    function saveModalAttendance() {
+      if (!modalSelectedDateStr || !selectedMemberId) return;
+      if (!db.records) db.records = {};
+      if (!db.records[modalSelectedDateStr]) db.records[modalSelectedDateStr] = {};
+
+      const status = document.getElementById('modalStatusSelect').value;
+      const record = { 
+        status,
+        shift: modalSelectedShift
+      };
+
+      if (status === 'Leave') {
+        record.leaveCategory = document.getElementById('modalLeaveCategory').value;
+        record.leaveDuration = document.getElementById('modalLeaveDuration').value;
+      } else if (status === 'Permission') {
+        record.permissionSlot = document.getElementById('modalPermissionSlot').value;
+      }
+
+      db.records[modalSelectedDateStr][selectedMemberId] = record;
+      saveDB();
+      closeModal();
+      renderCalendarAndSummary();
+    }
+
+    // ==========================================
+    // TAB 4: TEAM ROSTER & FINANCE TABLE
+    // ==========================================
+    let teamViewingDate = new Date(2026, 8, 1);
+
+    function navigateTeamMonth(delta) {
+      teamViewingDate.setMonth(teamViewingDate.getMonth() + delta);
+      renderTeamCalendarRoster();
+      renderTeamFinanceReport();
+    }
+
+    function renderTeamCalendarRoster() {
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      const grid = document.getElementById('teamCalendarGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const year = teamViewingDate.getFullYear();
+      const month = teamViewingDate.getMonth();
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      document.getElementById('teamCalendarMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = "h-14 bg-slate-50/50 rounded-lg";
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const weekend = isWeekend(dateKey);
+        const ahiHoliday = AHI_HOLIDAYS_2026[dateKey];
+        const isOffDay = weekend || !!ahiHoliday;
+
+        let leaveCount = 0;
+        let permCount = 0;
+        let wfhCount = 0;
+
+        if (team && team.members && db.records && db.records[dateKey]) {
+          team.members.forEach(m => {
+            const rec = db.records[dateKey][m.id];
+            if (rec) {
+              if (rec.status === 'Leave') leaveCount++;
+              if (rec.status === 'Permission') permCount++;
+              if (rec.status === 'WFH') wfhCount++;
+            }
+          });
+        }
+
+        const cell = document.createElement('div');
+        cell.className = `min-h-14 p-1 border rounded-lg flex flex-col justify-between cursor-pointer hover:bg-brand-lightPurple/40 transition ${isOffDay ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200'}`;
+        cell.onclick = () => openTeamDayDetails(dateKey);
+
+        let badgeRow = '';
+        if (leaveCount > 0) badgeRow += `<span class="bg-rose-100 text-rose-800 text-[9px] px-1 rounded font-bold">${leaveCount}L</span>`;
+        if (permCount > 0) badgeRow += `<span class="bg-amber-100 text-amber-800 text-[9px] px-1 rounded font-bold">${permCount}P</span>`;
+        if (wfhCount > 0) badgeRow += `<span class="bg-blue-100 text-blue-800 text-[9px] px-1 rounded font-bold">${wfhCount}WFH</span>`;
+
+        cell.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold ${weekend ? 'text-rose-500' : 'text-slate-700'}">${day}</span>
+            ${ahiHoliday ? `<span class="text-[8px] bg-purple-100 text-brand-purple px-1 rounded font-semibold">AHI</span>` : ''}
+          </div>
+          <div class="flex flex-wrap gap-0.5 mt-1">${badgeRow}</div>
+        `;
+        grid.appendChild(cell);
+      }
+    }
+
+    function openTeamDayDetails(dateKey) {
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (!team) return;
+
+      document.getElementById('teamDayModalTitle').innerText = `Team Status - ${dateKey}`;
+      const ahi = AHI_HOLIDAYS_2026[dateKey];
+      const us = US_HOLIDAYS_2026[dateKey];
+      let sub = isWeekend(dateKey) ? "Weekend Off" : "Working Day";
+      if (ahi) sub += ` &bull; AHI Holiday: ${ahi}`;
+      if (us) sub += ` &bull; US Holiday: ${us}`;
+      document.getElementById('teamDayModalSubtitle').innerHTML = sub;
+
+      const container = document.getElementById('teamDayModalContent');
+      container.innerHTML = '';
+
+      (team.members || []).forEach(member => {
+        const monthKey = dateKey.slice(0, 7);
+        const shift = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
+        const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
+        
+        let statusTag = '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO</span>';
+        if (isWeekend(dateKey) || ahi) {
+          statusTag = '<span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full font-semibold">Scheduled Off</span>';
+        }
+
+        if (rawRec) {
+          if (rawRec.status === 'WFO') statusTag = (isWeekend(dateKey) || ahi) ? '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO (Allowance + Comp)</span>' : '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO</span>';
+          if (rawRec.status === 'WFH') statusTag = (isWeekend(dateKey) || ahi) ? '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-semibold">WFH (Allowance + Comp)</span>' : '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-semibold">WFH (Allowance)</span>';
+          if (rawRec.status === 'Leave') statusTag = `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full font-semibold">Leave (${rawRec.leaveCategory || 'Full'})</span>`;
+          if (rawRec.status === 'Permission') statusTag = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold">Permission (${rawRec.permissionSlot || '2h'})</span>`;
+        }
+
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center p-2.5 bg-slate-50 rounded-xl text-xs";
+        row.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-800 block">${member.name} (${member.empId || 'N/A'})</span>
+            <span class="text-slate-400 text-[11px]">${member.cohort || 'Analyst'} &bull; ${shift}</span>
+          </div>
+          <div>${statusTag}</div>
+        `;
+        container.appendChild(row);
+      });
+
+      document.getElementById('teamDayModal').classList.remove('hidden');
+    }
+
+    function closeTeamDayModal() {
+      document.getElementById('teamDayModal').classList.add('hidden');
+    }
+
+    function getDateRangeForFinance(viewYear, viewMonth, cycleType) {
+      const dates = [];
+      if (cycleType === 'finance') {
+        const prevMonthDate = new Date(viewYear, viewMonth - 1, 21);
+        const curMonthDate = new Date(viewYear, viewMonth, 20);
+
+        let cur = new Date(prevMonthDate);
+        while (cur <= curMonthDate) {
+          dates.push(cur.toISOString().split('T')[0]);
+          cur.setDate(cur.getDate() + 1);
+        }
+      } else {
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+          dates.push(`${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+        }
+      }
+      return dates;
+    }
+
+    function renderTeamFinanceReport() {
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      const tbody = document.getElementById('financeTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!team || !team.members || team.members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No team members to display</td></tr>`;
+        return;
+      }
+
+      const cycleType = document.getElementById('cycleSelector').value;
+      const year = teamViewingDate.getFullYear();
+      const month = teamViewingDate.getMonth();
+      const dates = getDateRangeForFinance(year, month, cycleType);
+
+      if (cycleType === 'finance') {
+        const prevMonthNum = month === 0 ? 12 : month;
+        const curMonthNum = month + 1;
+        document.getElementById('cycleRangeLabel').innerText = `21-${prevMonthNum} to 20-${curMonthNum} (${year})`;
+      } else {
+        document.getElementById('cycleRangeLabel').innerText = `1st to end of Month (${year})`;
+      }
+
+      team.members.forEach(member => {
+        let shiftDayCounts = {};
+        db.shifts.forEach(s => { shiftDayCounts[s.name] = 0; });
+
+        dates.forEach(dateKey => {
+          const weekend = isWeekend(dateKey);
+          const ahiHoliday = AHI_HOLIDAYS_2026[dateKey];
+          const isOffDay = weekend || !!ahiHoliday;
+
+          const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
+          const shiftToday = getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7));
+
+          let status = isOffDay ? "OFF" : "WFO";
+          if (rawRec && rawRec.status !== 'DEFAULT') status = rawRec.status;
+
+          let eligible = false;
+          if (status === 'WFO' || status === 'WFH' || status === 'Permission') {
+            eligible = true;
+          } else if (status === 'Leave' && rawRec && rawRec.leaveDuration === 'First Half') {
+            eligible = true;
+          }
+
+          if (eligible) {
+            if (shiftDayCounts[shiftToday] !== undefined) {
+              shiftDayCounts[shiftToday]++;
+            } else {
+              shiftDayCounts[shiftToday] = 1;
+            }
+          }
+        });
+
+        // Generate rows for every configured shift worked by this member
+        db.shifts.forEach(s => {
+          const count = shiftDayCounts[s.name] || 0;
+          if (count > 0 || (s.name === member.defaultShift && Object.values(shiftDayCounts).every(v => v === 0))) {
+            const tr = document.createElement('tr');
+            const isNightHighlight = s.name.toLowerCase().includes('night');
+            tr.className = isNightHighlight
+              ? "bg-yellow-200 text-slate-900 font-medium border-b border-slate-300 hover:bg-yellow-300 transition"
+              : "hover:bg-slate-50 transition border-b border-slate-200";
+            
+            tr.innerHTML = `
+              <td class="p-2 border-r border-slate-200 font-mono">${member.empId || ''}</td>
+              <td class="p-2 border-r border-slate-200 font-semibold">${member.name}</td>
+              <td class="p-2 border-r border-slate-200 text-center font-bold">${count}</td>
+              <td class="p-2 border-r border-slate-200 font-medium">${s.name}</td>
+              <td class="p-2 border-r border-slate-200 text-center">${s.start}</td>
+              <td class="p-2 border-r border-slate-200 text-center">${s.end}</td>
+              <td class="p-2 font-medium">${member.cohort || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+      });
+    }
+
+    function exportFinanceCSV() {
+      const table = document.getElementById('financeTable');
+      let csv = [];
+      for (let i = 0; i < table.rows.length; i++) {
+        let row = [], cols = table.rows[i].querySelectorAll('td, th');
+        for (let j = 0; j < cols.length; j++) {
+          row.push('"' + cols[j].innerText.trim() + '"');
+        }
+        csv.push(row.join(','));
+      }
+      const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `AthenaHealth_Shift_Report_${teamViewingDate.getFullYear()}_${teamViewingDate.getMonth() + 1}.csv`;
+      downloadLink.href = window.URL.createObjectURL(csvFile);
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
+    // Run Auth & App Initialization
+    checkLocalSession();
+  </script>
+</body>
+</html>
