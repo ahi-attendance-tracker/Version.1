@@ -731,13 +731,13 @@
     let dbRef = null;
     try {
       const firebaseConfig = {
-        apiKey: "AIzaSyBzAGph9TyEtQ3IGDy9aIZK3MV60R9ODD8",
+        apiKey: "YOUR_API_KEY",
         authDomain: "athena-roster-6aac5.firebaseapp.com",
         databaseURL: "https://athena-roster-6aac5-default-rtdb.firebaseio.com",
         projectId: "athena-roster-6aac5",
         storageBucket: "athena-roster-6aac5.firebasestorage.app",
-        messagingSenderId: "1045213487802",
-        appId: "1:1045213487802:web:2d9ed975b4960703425883"
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
       };
 
       if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_")) {
@@ -1909,7 +1909,7 @@
     }
 
     // ==========================================
-    // TAB 4: TEAM ROSTER & FINANCE TABLE
+    // TAB 4: TEAM ROSTER & FINANCE TABLE (CORRECTED HOLIDAYS)
     // ==========================================
     let teamViewingDate = new Date(2026, 8, 1);
 
@@ -2034,12 +2034,14 @@
     function getDateRangeForFinance(viewYear, viewMonth, cycleType) {
       const dates = [];
       if (cycleType === 'finance') {
-        const prevMonthDate = new Date(viewYear, viewMonth - 1, 21);
-        const curMonthDate = new Date(viewYear, viewMonth, 20);
+        let cur = new Date(viewYear, viewMonth - 1, 21);
+        const endDate = new Date(viewYear, viewMonth, 20);
 
-        let cur = new Date(prevMonthDate);
-        while (cur <= curMonthDate) {
-          dates.push(cur.toISOString().split('T')[0]);
+        while (cur <= endDate) {
+          const y = cur.getFullYear();
+          const m = String(cur.getMonth() + 1).padStart(2, '0');
+          const d = String(cur.getDate()).padStart(2, '0');
+          dates.push(`${y}-${m}-${d}`);
           cur.setDate(cur.getDate() + 1);
         }
       } else {
@@ -2081,14 +2083,16 @@
 
         dates.forEach(dateKey => {
           const weekend = isWeekend(dateKey);
-          const ahiHoliday = AHI_HOLIDAYS_2026[dateKey];
-          const isOffDay = weekend || !!ahiHoliday;
+          const ahiHoliday = Boolean(AHI_HOLIDAYS_2026[dateKey]);
+          const isOffDay = weekend || ahiHoliday;
 
           const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
           const shiftToday = getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7));
 
           let status = isOffDay ? "OFF" : "WFO";
-          if (rawRec && rawRec.status !== 'DEFAULT') status = rawRec.status;
+          if (rawRec && rawRec.status && rawRec.status !== 'DEFAULT') {
+            status = rawRec.status;
+          }
 
           let eligible = false;
           if (status === 'WFO' || status === 'WFH' || status === 'Permission') {
