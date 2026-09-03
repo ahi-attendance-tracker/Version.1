@@ -56,7 +56,7 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <!-- Settings Gear Button (Visible only when logged in) -->
+        <!-- Settings Gear Button -->
         <button id="headerSettingsBtn" onclick="openSettingsModal()" title="System Configuration" class="hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition border border-white/20">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -64,7 +64,7 @@
           </svg>
         </button>
 
-        <!-- Exact Official athenahealth Vector Logo -->
+        <!-- athenahealth Vector Logo -->
         <div class="flex items-center">
           <svg class="h-7 sm:h-8 w-auto" viewBox="0 0 340 70" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g transform="translate(0, 5)">
@@ -97,12 +97,17 @@
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
-                <input type="text" id="loginEmpId" placeholder="e.g. 29146" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+                <input type="text" id="loginEmpId" placeholder="Enter Employee ID" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">4-Digit Numeric PIN</label>
-                <input type="password" id="loginPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+                <div class="relative">
+                  <input type="password" id="loginPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg pl-3 pr-10 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+                  <button type="button" onclick="togglePinVisibility('loginPin', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </button>
+                </div>
               </div>
 
               <div id="loginErrorMsg" class="hidden text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-200 p-2.5 rounded-lg"></div>
@@ -127,11 +132,11 @@
             <h3 class="text-xs font-bold uppercase text-brand-purple tracking-wider">Set Initial 4-Digit PIN</h3>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
-              <input type="text" id="setPinEmpId" placeholder="e.g. 29146" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+              <input type="text" id="setPinEmpId" placeholder="Enter Employee ID" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Full Employee Name</label>
-              <input type="text" id="setPinName" placeholder="e.g. Sridhar" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+              <input type="text" id="setPinName" placeholder="Full Name as per Roster" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Select Cohort</label>
@@ -139,11 +144,21 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Create 4-Digit Numeric PIN</label>
-              <input type="password" id="newPin" maxlength="4" placeholder="e.g. 1234" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+              <div class="relative">
+                <input type="password" id="newPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg pl-3 pr-10 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+                <button type="button" onclick="togglePinVisibility('newPin', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Confirm 4-Digit PIN</label>
-              <input type="password" id="confirmNewPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+              <div class="relative">
+                <input type="password" id="confirmNewPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg pl-3 pr-10 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+                <button type="button" onclick="togglePinVisibility('confirmNewPin', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
             </div>
             <div id="setPinMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
             <div class="flex gap-2 pt-1">
@@ -155,17 +170,23 @@
           <!-- Forgot Password View -->
           <div id="forgotPinForm" class="hidden space-y-3">
             <h3 class="text-xs font-bold uppercase text-brand-purple tracking-wider">Reset 4-Digit PIN</h3>
+            <p class="text-[11px] text-slate-500">Provide your registered Employee ID and Name to set a new 4-digit PIN.</p>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
-              <input type="text" id="resetEmpId" placeholder="Emp ID" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+              <input type="text" id="resetEmpId" placeholder="Enter Employee ID" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Full Employee Name</label>
-              <input type="text" id="resetEmpName" placeholder="Full name registered on roster" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
+              <input type="text" id="resetEmpName" placeholder="Full Name as per Roster" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-purple">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">New 4-Digit Numeric PIN</label>
-              <input type="password" id="resetNewPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+              <div class="relative">
+                <input type="password" id="resetNewPin" maxlength="4" placeholder="••••" class="w-full border border-slate-300 rounded-lg pl-3 pr-10 py-2 text-sm text-center tracking-widest outline-none focus:ring-2 focus:ring-brand-purple">
+                <button type="button" onclick="togglePinVisibility('resetNewPin', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
             </div>
             <div id="resetPinMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
             <div class="flex gap-2 pt-1">
@@ -213,7 +234,7 @@
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50">
           <h2 class="text-sm font-semibold text-brand-purple uppercase tracking-wide mb-3">Create New Team</h2>
           <div class="flex gap-2">
-            <input type="text" id="newTeamInput" placeholder="e.g. Integration Analysts" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
+            <input type="text" id="newTeamInput" placeholder="Enter Team Name" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
             <button onclick="createTeam()" class="bg-brand-purple hover:bg-brand-darkPurple text-white px-4 py-2 text-sm rounded-lg font-medium whitespace-nowrap shadow-sm">Add Team</button>
           </div>
         </div>
@@ -234,7 +255,7 @@
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50 space-y-3">
           <h3 class="text-sm font-semibold text-slate-700">Add Team Member</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" id="newEmpId" placeholder="Emp ID (e.g. 29146)" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
+            <input type="text" id="newEmpId" placeholder="Employee ID" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
             <input type="text" id="newMemberName" placeholder="Employee Full Name" class="border rounded-lg px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-brand-purple">
           </div>
           
@@ -445,7 +466,7 @@
       <!-- 1. Cohorts Setting Panel -->
       <div id="settingsPanelCohorts" class="space-y-3">
         <div class="flex gap-2">
-          <input type="text" id="newCohortInput" placeholder="Add Cohort (e.g. Lead Analyst, Trainee)" class="border rounded-lg px-3 py-2 text-xs w-full outline-none focus:ring-2 focus:ring-brand-purple">
+          <input type="text" id="newCohortInput" placeholder="Add Cohort Role" class="border rounded-lg px-3 py-2 text-xs w-full outline-none focus:ring-2 focus:ring-brand-purple">
           <button onclick="addNewCohort()" class="bg-brand-purple hover:bg-brand-darkPurple text-white px-4 py-2 text-xs rounded-lg font-semibold whitespace-nowrap">+ Add</button>
         </div>
         <div class="border rounded-xl p-3 bg-slate-50 space-y-2">
@@ -456,24 +477,23 @@
 
       <!-- 2. Shifts & Allowance Setting Panel -->
       <div id="settingsPanelShifts" class="hidden space-y-4">
-        <!-- Add New Shift Form -->
         <div class="bg-brand-lightPurple/40 border border-brand-borderPurple/60 p-3.5 rounded-xl space-y-3">
           <h4 class="text-xs font-bold text-brand-purple uppercase tracking-wider">Add Custom Shift</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
               <label class="block text-slate-600 font-semibold mb-1">Shift Name</label>
-              <input type="text" id="newShiftName" placeholder="e.g. General Shift, Night Shift" class="w-full border rounded-lg p-2 outline-none">
+              <input type="text" id="newShiftName" placeholder="Shift Name" class="w-full border rounded-lg p-2 outline-none">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">Allowance Rate (₹ / Day)</label>
               <input type="number" id="newShiftAllowance" placeholder="e.g. 600" class="w-full border rounded-lg p-2 outline-none">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">Start Time (HH:MM AM/PM)</label>
+              <label class="block text-slate-600 font-semibold mb-1">Start Time</label>
               <input type="text" id="newShiftStart" placeholder="e.g. 09:30 AM" class="w-full border rounded-lg p-2 outline-none">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">End Time (HH:MM AM/PM)</label>
+              <label class="block text-slate-600 font-semibold mb-1">End Time</label>
               <input type="text" id="newShiftEnd" placeholder="e.g. 06:30 PM" class="w-full border rounded-lg p-2 outline-none">
             </div>
           </div>
@@ -482,7 +502,6 @@
           </button>
         </div>
 
-        <!-- Current Shifts List -->
         <div class="space-y-2">
           <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Configured Shift Types:</span>
           <div class="space-y-2" id="configuredShiftsList"></div>
@@ -662,7 +681,7 @@
       "2026-12-25": "Christmas Day"
     };
 
-    // Default System State with Dynamic Shifts & Cohorts
+    // Default System State
     let db = {
       teams: [
         { id: "team_1", name: "Public Health", members: [] }
@@ -688,7 +707,7 @@
     let currentUser = null;
 
     // Local Storage Loading
-    const LOCAL_KEY = 'athena_attendance_v7_data';
+    const LOCAL_KEY = 'athena_attendance_v8_data';
     const localSaved = localStorage.getItem(LOCAL_KEY);
     if (localSaved) {
       try {
@@ -706,15 +725,22 @@
       }
     }
 
-    // Optional Firebase Setup
+    // ==========================================================
+    // PASTE YOUR EXACT FIREBASE KEYS IN THIS OBJECT:
+    // ==========================================================
     let dbRef = null;
     try {
       const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "athena-roster-6aac5.firebaseapp.com",
         databaseURL: "https://athena-roster-6aac5-default-rtdb.firebaseio.com",
         projectId: "athena-roster-6aac5",
-        storageBucket: "athena-roster-6aac5.firebasestorage.app"
+        storageBucket: "athena-roster-6aac5.firebasestorage.app",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
       };
-      if (firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("YOUR_")) {
+
+      if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_")) {
         firebase.initializeApp(firebaseConfig);
         dbRef = firebase.database().ref("athena_attendance_database");
         dbRef.on("value", (snapshot) => {
@@ -738,7 +764,7 @@
         });
       }
     } catch (err) {
-      console.log("Firebase optional sync.", err);
+      console.log("Firebase not configured, running locally.", err);
     }
 
     function saveDB() {
@@ -748,7 +774,18 @@
       }
     }
 
-    // Helper to find shift rate and details
+    // Show / Hide Password function
+    function togglePinVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === "password") {
+        input.type = "text";
+        btn.innerHTML = `<svg class="w-4 h-4 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>`;
+      } else {
+        input.type = "password";
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+      }
+    }
+
     function getShiftMeta(shiftName) {
       if (!db.shifts) return { allowance: 550, start: "3:30 PM", end: "12:30 AM" };
       const found = db.shifts.find(s => s.name === shiftName);
@@ -790,7 +827,6 @@
       }
     }
 
-    // Cohorts management inside Settings
     function renderCohorts() {
       const container = document.getElementById('cohortsBadgeContainer');
       if (!container) return;
@@ -836,7 +872,6 @@
       }
     }
 
-    // Shifts & Allowance Rate Management inside Settings
     function renderShiftsConfigList() {
       const container = document.getElementById('configuredShiftsList');
       if (!container) return;
@@ -877,7 +912,7 @@
       const end = document.getElementById('newShiftEnd').value.trim();
 
       if (!name || isNaN(allowance) || !start || !end) {
-        alert("Please provide all shift fields: Name, Allowance rate, Start time, and End time.");
+        alert("Please fill in all shift details.");
         return;
       }
 
@@ -915,7 +950,7 @@
 
     function removeShiftConfig(idx) {
       if (db.shifts.length <= 1) {
-        alert("You must keep at least one shift type configured.");
+        alert("At least one shift configuration is required.");
         return;
       }
       if (confirm(`Delete shift '${db.shifts[idx].name}'?`)) {
@@ -940,7 +975,6 @@
         ];
       }
 
-      // Populate Cohorts
       [addCohort, editCohort, setPinCohort].forEach(sel => {
         if (!sel) return;
         const curVal = sel.value;
@@ -949,7 +983,6 @@
         if (curVal && db.cohorts.includes(curVal)) sel.value = curVal;
       });
 
-      // Populate Shifts
       [addShift, editShift].forEach(sel => {
         if (!sel) return;
         const curVal = sel.value;
@@ -962,7 +995,7 @@
     }
 
     // ==========================================
-    // AUTHENTICATION LOGIC (Emp ID & 4-Digit PIN)
+    // AUTHENTICATION LOGIC
     // ==========================================
     function checkLocalSession() {
       populateAllDropdowns();
@@ -1092,7 +1125,7 @@
       }
 
       if (!/^\d{4}$/.test(pin)) {
-        msgBox.innerText = "PIN must be strictly 4 digits (e.g. 1234).";
+        msgBox.innerText = "PIN must be strictly 4 digits.";
         return;
       }
 
@@ -1149,7 +1182,7 @@
 
       const lookup = findMemberAcrossTeams(empId);
       if (!lookup || lookup.member.name.trim().toLowerCase() !== empName.trim().toLowerCase()) {
-        msgBox.innerText = "Verification failed. Employee ID and Name do not match our roster records.";
+        msgBox.innerText = "Verification failed. Employee ID and Name do not match.";
         return;
       }
 
@@ -1158,7 +1191,7 @@
       saveDB();
 
       msgBox.className = "text-xs font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 block";
-      msgBox.innerText = "Password reset successfully! Please sign in with your new PIN.";
+      msgBox.innerText = "PIN reset successfully! Please sign in with your new PIN.";
       setTimeout(showLoginForm, 1200);
     }
 
@@ -1612,7 +1645,6 @@
       document.getElementById('calMemberMeta').innerText = `Emp ID: ${member.empId || 'N/A'} | Cohort: ${member.cohort || 'Analyst'}`;
       document.getElementById('currentShiftMonthLabel').innerText = `${monthNames[month]} ${year}`;
 
-      // Render Dynamic Monthly Shift Selector Buttons
       const monthShiftBtnsContainer = document.getElementById('monthShiftButtonsContainer');
       monthShiftBtnsContainer.innerHTML = '';
       if (!db.shifts) db.shifts = [];
@@ -1747,7 +1779,6 @@
 
       document.getElementById('totalAllowanceDisplay').innerText = `₹${totalEarnedAllowance.toLocaleString('en-IN')}`;
 
-      // Render Dynamic Shifts Breakdown in Summary Card
       const summaryGrid = document.getElementById('summaryDynamicShiftsGrid');
       summaryGrid.innerHTML = '';
 
@@ -1761,7 +1792,6 @@
         summaryGrid.appendChild(item);
       });
 
-      // WFH & Comp Off boxes
       summaryGrid.innerHTML += `
         <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
           <span class="text-slate-400 block">WFH Days</span>
@@ -1805,7 +1835,6 @@
         wfhOpt.innerText = "WFH (Work From Home - Shift Allowance)";
       }
 
-      // Populate Dynamic Shift Buttons in Daily Modal
       const modalShiftBtnsContainer = document.getElementById('modalDynamicShiftButtons');
       modalShiftBtnsContainer.innerHTML = '';
       if (!db.shifts) db.shifts = [];
@@ -2077,7 +2106,6 @@
           }
         });
 
-        // Generate rows for every configured shift worked by this member
         db.shifts.forEach(s => {
           const count = shiftDayCounts[s.name] || 0;
           if (count > 0 || (s.name === member.defaultShift && Object.values(shiftDayCounts).every(v => v === 0))) {
