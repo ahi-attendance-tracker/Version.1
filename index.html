@@ -345,7 +345,7 @@
           <div class="bg-brand-lightPurple/70 border border-brand-borderPurple/50 rounded-xl p-3.5 flex justify-between items-center">
             <div>
               <p class="text-xs text-brand-purple font-bold">Earned Shift Allowance</p>
-              <p class="text-[11px] text-slate-500">Calculated automatically from shift timings, extensions, and permissions</p>
+              <p class="text-[11px] text-slate-500">Calculated automatically from shift timings and extensions (21st to 20th cycle)</p>
             </div>
             <div class="text-right">
               <span class="text-xl font-bold text-brand-purple" id="totalAllowanceDisplay">₹0</span>
@@ -371,7 +371,7 @@
         </div>
       </section>
 
-      <!-- TAB 4: TEAM CALENDAR & CONSOLIDATED FINANCE REPORT -->
+      <!-- TAB 4: TEAM CALENDAR & REPORTS -->
       <section id="viewTeamRoster" class="hidden space-y-4">
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
@@ -392,39 +392,71 @@
           <div id="teamCalendarGrid" class="calendar-grid gap-1"></div>
         </div>
 
+        <!-- REPORTS CONTAINER WITH VIEW SWITCHER DROPDOWN -->
         <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-50 space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-purple-50 pb-3">
-            <div>
-              <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Finance Shift Allowance Report</h3>
-              <p class="text-xs text-slate-500">Billing Cycle: <strong class="text-brand-purple" id="cycleRangeLabel">21st Prev Month - 20th Current Month</strong></p>
-            </div>
-            <div class="flex items-center gap-2">
-              <select id="cycleSelector" onchange="renderTeamFinanceReport()" class="text-xs border border-slate-200 rounded-lg p-1.5 outline-none bg-white">
-                <option value="finance">Finance Cycle (21st to 20th)</option>
-                <option value="calendar">Calendar Month (1st to 30/31st)</option>
+            <div class="flex items-center gap-3">
+              <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Team Operations Report</h3>
+              <!-- Report Type Selector Dropdown -->
+              <select id="reportTypeSelector" onchange="switchReportView(this.value)" class="text-xs font-bold text-brand-purple bg-brand-lightPurple border border-brand-borderPurple rounded-lg px-3 py-1.5 outline-none">
+                <option value="pto">PTO Report (Leaves & Holidays)</option>
+                <option value="finance">Finance Shift Allowance Report</option>
               </select>
-              <button onclick="exportFinanceCSV()" class="bg-brand-green hover:bg-brand-darkGreen text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-sm">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <!-- Cycle Selector for Finance Report -->
+              <select id="cycleSelector" onchange="renderActiveReport()" class="text-xs border border-slate-200 rounded-lg p-1.5 outline-none bg-white">
+                <option value="finance">Financial Cycle (21st Prev - 20th Cur)</option>
+                <option value="calendar">Calendar Month (1st to 31st)</option>
+              </select>
+              
+              <!-- Dynamic Export Button -->
+              <button id="exportReportBtn" onclick="exportActiveReportCSV()" class="bg-brand-green hover:bg-brand-darkGreen text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-sm">
                 &darr; Export CSV
               </button>
             </div>
           </div>
 
-          <div class="overflow-x-auto border border-slate-200 rounded-xl">
-            <table class="w-full text-left text-xs border-collapse" id="financeTable">
-              <thead>
-                <tr class="bg-brand-lightPurple text-brand-purple font-bold border-b border-brand-borderPurple">
-                  <th class="p-2 border-r border-purple-200">Emp ID</th>
-                  <th class="p-2 border-r border-purple-200">Employee Name</th>
-                  <th class="p-2 border-r border-purple-200 text-center">Number of Shift Days</th>
-                  <th class="p-2 border-r border-purple-200">Shift Criteria</th>
-                  <th class="p-2 border-r border-purple-200 text-center">Shift Start time</th>
-                  <th class="p-2 border-r border-purple-200 text-center">Shift End time</th>
-                  <th class="p-2">Cohort</th>
-                </tr>
-              </thead>
-              <tbody id="financeTableBody" class="divide-y divide-slate-200"></tbody>
-            </table>
+          <!-- 1. PTO REPORT VIEW -->
+          <div id="reportViewPto" class="space-y-2">
+            <p class="text-xs text-slate-500" id="ptoReportSubtitle">PTO Report for Month</p>
+            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left text-xs border-collapse" id="ptoTable">
+                <thead>
+                  <tr class="border-b border-slate-200">
+                    <th class="p-2.5 bg-[#004D71] text-white font-bold border-r border-slate-200">Employee Name</th>
+                    <th class="p-2.5 bg-[#FFC000] text-slate-900 font-bold border-r border-slate-200 text-center w-28">PTO</th>
+                    <th class="p-2.5 bg-[#7030A0] text-white font-bold border-r border-slate-200 text-center w-36">TOTAL HOLIDAY</th>
+                    <th class="p-2.5 bg-[#92D050] text-slate-900 font-bold text-center w-40">WORKED ON HOLIDAY</th>
+                  </tr>
+                </thead>
+                <tbody id="ptoTableBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
           </div>
+
+          <!-- 2. FINANCE SHIFT ALLOWANCE REPORT VIEW -->
+          <div id="reportViewFinance" class="hidden space-y-2">
+            <p class="text-xs text-slate-500">Billing Cycle Range: <strong class="text-brand-purple" id="cycleRangeLabel">21st Prev Month - 20th Current Month</strong></p>
+            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left text-xs border-collapse" id="financeTable">
+                <thead>
+                  <tr class="bg-brand-lightPurple text-brand-purple font-bold border-b border-brand-borderPurple">
+                    <th class="p-2 border-r border-purple-200">Emp ID</th>
+                    <th class="p-2 border-r border-purple-200">Employee Name</th>
+                    <th class="p-2 border-r border-purple-200 text-center">Number of Shift Days</th>
+                    <th class="p-2 border-r border-purple-200">Shift Criteria</th>
+                    <th class="p-2 border-r border-purple-200 text-center">Shift Start time</th>
+                    <th class="p-2 border-r border-purple-200 text-center">Shift End time</th>
+                    <th class="p-2">Cohort</th>
+                  </tr>
+                </thead>
+                <tbody id="financeTableBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </section>
     </div>
@@ -565,7 +597,7 @@
     </div>
   </div>
 
-  <!-- TEAM DAY DETAILS MODAL (TAB 4) LAYERED AT z-50 -->
+  <!-- TEAM DAY DETAILS MODAL (TAB 4) WITH PTO HIGHLIGHTING -->
   <div id="teamDayModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-3 sm:p-4 z-50">
     <div class="bg-white rounded-2xl w-full max-w-2xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
       <div class="flex justify-between items-start border-b pb-2">
@@ -582,7 +614,7 @@
     </div>
   </div>
 
-  <!-- FIXED TOP LAYER: LEAVE / PERMISSION POPUP PLACED ABOVE TEAM STATUS (z-[9999]) -->
+  <!-- FIXED TOP LAYER: LEAVE / PERMISSION POPUP (z-[9999]) -->
   <div id="attendanceModal" style="z-index: 9999;" class="fixed inset-0 bg-black/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-purple-200">
       <div class="flex justify-between items-start border-b pb-2">
@@ -623,7 +655,6 @@
           </select>
         </div>
 
-        <!-- 4 Granular Permission Slots -->
         <div id="modalPermissionSection" class="hidden space-y-2">
           <label class="block font-medium">Permission Timing (2 Hours)</label>
           <select id="modalPermissionSlot" class="w-full border rounded-lg p-2.5 outline-none bg-white text-xs">
@@ -1198,7 +1229,7 @@
         renderCalendarAndSummary();
       } else if (!document.getElementById('viewTeamRoster').classList.contains('hidden')) {
         renderTeamCalendarRoster();
-        renderTeamFinanceReport();
+        renderActiveReport();
       }
     }
 
@@ -1254,7 +1285,7 @@
         vTeamRoster.classList.remove('hidden');
         bTeamRoster.className = activeClass;
         renderTeamCalendarRoster();
-        renderTeamFinanceReport();
+        renderActiveReport();
       }
     }
 
@@ -1505,7 +1536,7 @@
       });
     }
 
-    // CALENDAR LOGIC
+    // CALENDAR LOGIC (FINANCIAL CYCLE 21st to 20th FOR SUMMARY)
     function isWeekend(dateKey) {
       const d = new Date(dateKey + 'T00:00:00');
       const day = d.getDay();
@@ -1623,6 +1654,21 @@
       renderCalendarAndSummary();
     }
 
+    function getFinanceCycleDatesForMonth(viewYear, viewMonth) {
+      const dates = [];
+      let cur = new Date(viewYear, viewMonth - 1, 21);
+      const endDate = new Date(viewYear, viewMonth, 20);
+
+      while (cur <= endDate) {
+        const y = cur.getFullYear();
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        const d = String(cur.getDate()).padStart(2, '0');
+        dates.push(`${y}-${m}-${d}`);
+        cur.setDate(cur.getDate() + 1);
+      }
+      return dates;
+    }
+
     function renderCalendarAndSummary() {
       const team = db.teams.find(t => t.id === selectedTeamId);
       if (!team || !team.members || team.members.length === 0) return;
@@ -1665,7 +1711,7 @@
       });
 
       document.getElementById('calendarMonthYear').innerText = `${monthNames[month]} ${year}`;
-      document.getElementById('summaryMonthLabel').innerText = `${monthNames[month]} ${year}`;
+      document.getElementById('summaryMonthLabel').innerText = `${monthNames[month]} ${year} (21st-20th)`;
 
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1679,15 +1725,7 @@
         grid.appendChild(empty);
       }
 
-      let dynamicShiftCounts = {};
-      db.shifts.forEach(s => { dynamicShiftCounts[s.name] = 0; });
-
-      let countWFH = 0;
-      let countPermissions = 0;
-      let totalEarnedAllowance = 0;
-      let compOffEarned = 0;
-      let countLeaves = 0;
-
+      // Render calendar grid days for the selected calendar month view
       for (let day = 1; day <= daysInMonth; day++) {
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const weekend = isWeekend(dateKey);
@@ -1709,9 +1747,6 @@
           shiftToday = "Night Shift";
         }
 
-        const shiftMeta = getShiftMeta(shiftToday);
-        const rateToday = shiftMeta.allowance;
-
         let badgeColor = "bg-white text-slate-700 border-slate-200";
         let badgeLabel = "";
 
@@ -1724,58 +1759,24 @@
             badgeLabel = "Weekend";
           }
         } else if (effectiveStatus === 'WFO') {
-          totalEarnedAllowance += rateToday;
-          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
-          
           badgeColor = "bg-brand-lightGreen text-brand-darkGreen border-brand-green/30";
           badgeLabel = `WFO (${shiftToday.split(' ')[0]})`;
-          if (isOffDay) {
-            compOffEarned += 1;
-            badgeLabel += " +Comp";
-          }
+          if (isOffDay) badgeLabel += " +Comp";
         } else if (effectiveStatus === 'WFH') {
-          countWFH++;
-          totalEarnedAllowance += rateToday;
-          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
-
           badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
           badgeLabel = `WFH (${shiftToday.split(' ')[0]})`;
-          if (isOffDay) {
-            compOffEarned += 1;
-            badgeLabel += " +Comp";
-          }
+          if (isOffDay) badgeLabel += " +Comp";
         } else if (effectiveStatus === 'Extend Shift') {
-          totalEarnedAllowance += rateToday;
-          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
           badgeColor = "bg-purple-100 text-brand-purple border-purple-300 font-bold";
-          badgeLabel = `Ext Shift (₹${rateToday})`;
-          if (isOffDay) {
-            compOffEarned += 1;
-            badgeLabel += " +Comp";
-          }
+          badgeLabel = `Ext Shift`;
+          if (isOffDay) badgeLabel += " +Comp";
         } else if (effectiveStatus === 'Leave') {
           badgeColor = "bg-rose-50 text-rose-700 border-rose-200";
           const dur = rawRecord.leaveDuration || "Full Day";
-          countLeaves += (dur === 'Full Day' ? 1 : 0.5);
           badgeLabel = dur === 'Full Day' ? "Leave" : `Half L (${dur === 'First Half' ? '1st' : '2nd'})`;
-          if (dur !== 'Second Half' && dur !== 'Full Day') {
-            totalEarnedAllowance += rateToday;
-            if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
-            if (isOffDay) compOffEarned += 0.5;
-          }
         } else if (effectiveStatus === 'Permission') {
-          countPermissions++;
-          const slot = rawRecord && rawRecord.permissionSlot;
-          const isNoAllowanceSlot = slot && slot.includes('Second 2 Hours') && slot.includes('2nd Half');
-          
-          if (!isNoAllowanceSlot) {
-            totalEarnedAllowance += rateToday;
-            if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
-          }
-          
           badgeColor = "bg-amber-50 text-amber-800 border-amber-200";
-          badgeLabel = isNoAllowanceSlot ? "P (2h-No ₹)" : "P (2h)";
-          if (isOffDay) compOffEarned += 1;
+          badgeLabel = "P (2h)";
         }
 
         const cell = document.createElement('div');
@@ -1799,6 +1800,67 @@
         `;
         grid.appendChild(cell);
       }
+
+      // Calculate Summary strictly over Financial Cycle (21st prev month to 20th current month)
+      const cycleDates = getFinanceCycleDatesForMonth(year, month);
+      let dynamicShiftCounts = {};
+      db.shifts.forEach(s => { dynamicShiftCounts[s.name] = 0; });
+
+      let countWFH = 0;
+      let countPermissions = 0;
+      let totalEarnedAllowance = 0;
+      let compOffEarned = 0;
+      let countLeaves = 0;
+
+      cycleDates.forEach(dateKey => {
+        const weekend = isWeekend(dateKey);
+        const ahiHoliday = Boolean(AHI_HOLIDAYS_2026[dateKey]);
+        const isOffDay = weekend || ahiHoliday;
+
+        const rawRecord = (db.records && db.records[dateKey] && db.records[dateKey][member.id]);
+        let shiftToday = getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7));
+
+        let status = isOffDay ? "OFF" : "WFO";
+        if (rawRecord && rawRecord.status && rawRecord.status !== 'DEFAULT') {
+          status = rawRecord.status;
+        }
+
+        if (status === 'Extend Shift') {
+          shiftToday = "Night Shift";
+        }
+
+        const shiftMeta = getShiftMeta(shiftToday);
+        const rateToday = shiftMeta.allowance;
+
+        let eligible = false;
+        if (status === 'WFO' || status === 'WFH' || status === 'Extend Shift') {
+          eligible = true;
+          if (status === 'WFH') countWFH++;
+          if (isOffDay) compOffEarned += 1;
+        } else if (status === 'Permission') {
+          countPermissions++;
+          const slot = rawRecord && rawRecord.permissionSlot;
+          const isNoAllowanceSlot = slot && slot.includes('Second 2 Hours') && slot.includes('2nd Half');
+          if (!isNoAllowanceSlot) {
+            eligible = true;
+          }
+          if (isOffDay) compOffEarned += 1;
+        } else if (status === 'Leave') {
+          const dur = rawRecord.leaveDuration || "Full Day";
+          countLeaves += (dur === 'Full Day' ? 1 : 0.5);
+          if (dur === 'First Half') {
+            eligible = true;
+            if (isOffDay) compOffEarned += 0.5;
+          }
+        }
+
+        if (eligible) {
+          totalEarnedAllowance += rateToday;
+          if (dynamicShiftCounts[shiftToday] !== undefined) {
+            dynamicShiftCounts[shiftToday]++;
+          }
+        }
+      });
 
       document.getElementById('totalAllowanceDisplay').innerText = `₹${totalEarnedAllowance.toLocaleString('en-IN')}`;
 
@@ -1899,13 +1961,51 @@
       }
     }
 
-    // TAB 4: TEAM ROSTER & FINANCE TABLE
+    // TAB 4: TEAM ROSTER & REPORTS VIEWER
     let teamViewingDate = new Date(2026, 8, 1);
 
     function navigateTeamMonth(delta) {
       teamViewingDate.setMonth(teamViewingDate.getMonth() + delta);
       renderTeamCalendarRoster();
-      renderTeamFinanceReport();
+      renderActiveReport();
+    }
+
+    function switchReportView(viewType) {
+      const ptoContainer = document.getElementById('reportViewPto');
+      const financeContainer = document.getElementById('reportViewFinance');
+      const cycleSelector = document.getElementById('cycleSelector');
+
+      if (viewType === 'pto') {
+        ptoContainer.classList.remove('hidden');
+        financeContainer.classList.add('hidden');
+        if (cycleSelector) cycleSelector.classList.add('hidden');
+        renderTeamPtoReport();
+      } else {
+        ptoContainer.classList.add('hidden');
+        financeContainer.classList.remove('hidden');
+        if (cycleSelector) cycleSelector.classList.remove('hidden');
+        renderTeamFinanceReport();
+      }
+    }
+
+    function renderActiveReport() {
+      const selector = document.getElementById('reportTypeSelector');
+      const currentView = selector ? selector.value : 'pto';
+      if (currentView === 'pto') {
+        renderTeamPtoReport();
+      } else {
+        renderTeamFinanceReport();
+      }
+    }
+
+    function exportActiveReportCSV() {
+      const selector = document.getElementById('reportTypeSelector');
+      const currentView = selector ? selector.value : 'pto';
+      if (currentView === 'pto') {
+        exportPtoCSV();
+      } else {
+        exportFinanceCSV();
+      }
     }
 
     function renderTeamCalendarRoster() {
@@ -2000,7 +2100,7 @@
 
       saveDB();
       renderTeamCalendarRoster();
-      renderTeamFinanceReport();
+      renderActiveReport();
       renderCalendarAndSummary();
       openTeamDayDetails(dateKey);
     }
@@ -2024,11 +2124,12 @@
 
       saveDB();
       renderTeamCalendarRoster();
-      renderTeamFinanceReport();
+      renderActiveReport();
       renderCalendarAndSummary();
       openTeamDayDetails(dateKey);
     }
 
+    // TEAM STATUS MODAL WITH RED HIGHLIGHTING FOR MEMBERS ON PTO (LEAVE)
     function openTeamDayDetails(dateKey) {
       activeTeamModalDateStr = dateKey;
       const team = db.teams.find(t => t.id === selectedTeamId);
@@ -2057,17 +2158,24 @@
         }
 
         const isNight = (shift === 'Night Shift');
+        const isPto = (status === 'Leave');
 
         const row = document.createElement('div');
-        row.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-slate-50 border border-slate-200 rounded-xl gap-2";
+        // Highlight member row in red/rose if they are on PTO (Leave)
+        row.className = `flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded-xl gap-2 transition ${
+          isPto 
+            ? 'bg-rose-50 border-rose-400 ring-1 ring-rose-400 shadow-sm' 
+            : 'bg-slate-50 border-slate-200'
+        }`;
 
         row.innerHTML = `
           <div class="flex-1">
-            <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+            <span class="font-bold ${isPto ? 'text-rose-900' : 'text-slate-800'} text-sm flex items-center gap-1.5">
               ${member.name}
-              <span class="text-xs font-mono text-slate-500 font-normal">(${member.empId || 'N/A'})</span>
+              <span class="text-xs font-mono ${isPto ? 'text-rose-700' : 'text-slate-500'} font-normal">(${member.empId || 'N/A'})</span>
+              ${isPto ? '<span class="bg-rose-200 text-rose-900 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">PTO</span>' : ''}
             </span>
-            <span class="text-slate-400 text-[11px]">${member.cohort || 'Analyst'}</span>
+            <span class="${isPto ? 'text-rose-700 font-semibold' : 'text-slate-400'} text-[11px]">${member.cohort || 'Analyst'}</span>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap self-end sm:self-center">
@@ -2084,7 +2192,7 @@
 
             <!-- Status Dropdown -->
             <select onchange="updateInlineAttendanceStatus('${member.id}', '${dateKey}', this.value)" 
-              class="text-xs font-semibold rounded-lg px-2.5 py-1 outline-none border bg-white border-slate-300 text-slate-700 shadow-sm focus:ring-1 focus:ring-brand-purple">
+              class="text-xs font-semibold rounded-lg px-2.5 py-1 outline-none border bg-white ${isPto ? 'border-rose-400 text-rose-900 font-bold' : 'border-slate-300 text-slate-700'} shadow-sm focus:ring-1 focus:ring-brand-purple">
               <option value="DEFAULT" ${status === 'DEFAULT' ? 'selected' : ''}>Default (Auto)</option>
               <option value="WFO" ${status === 'WFO' ? 'selected' : ''}>WFO</option>
               <option value="WFH" ${status === 'WFH' ? 'selected' : ''}>WFH</option>
@@ -2105,28 +2213,96 @@
       activeTeamModalDateStr = null;
     }
 
-    function getDateRangeForFinance(viewYear, viewMonth, cycleType) {
-      const dates = [];
-      if (cycleType === 'finance') {
-        let cur = new Date(viewYear, viewMonth - 1, 21);
-        const endDate = new Date(viewYear, viewMonth, 20);
+    // PTO & HOLIDAY REPORT GENERATION
+    function renderTeamPtoReport() {
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      const tbody = document.getElementById('ptoTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
 
-        while (cur <= endDate) {
-          const y = cur.getFullYear();
-          const m = String(cur.getMonth() + 1).padStart(2, '0');
-          const d = String(cur.getDate()).padStart(2, '0');
-          dates.push(`${y}-${m}-${d}`);
-          cur.setDate(cur.getDate() + 1);
-        }
-      } else {
-        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-        for (let d = 1; d <= daysInMonth; d++) {
-          dates.push(`${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
-        }
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const viewMonthName = monthNames[teamViewingDate.getMonth()];
+      const reportTitle = document.getElementById('ptoReportTitle');
+      if (reportTitle) reportTitle.innerText = `PTO Report for ${viewMonthName} Month`;
+
+      if (!team || !team.members || team.members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">No team members to display</td></tr>`;
+        return;
       }
-      return dates;
+
+      const year = teamViewingDate.getFullYear();
+      const month = teamViewingDate.getMonth();
+      const cycleDates = getFinanceCycleDatesForMonth(year, month);
+
+      // Total Weekday AHI Holidays occurring in financial cycle
+      let totalHolidaysCount = 0;
+      cycleDates.forEach(d => {
+        if (!isWeekend(d) && AHI_HOLIDAYS_2026[d]) {
+          totalHolidaysCount++;
+        }
+      });
+
+      team.members.forEach(member => {
+        let loggedPtoOnly = 0;
+        let workedOnHoliday = 0;
+
+        cycleDates.forEach(dateKey => {
+          const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
+          const isAhi = Boolean(AHI_HOLIDAYS_2026[dateKey]);
+          const status = rawRec && rawRec.status ? rawRec.status : "DEFAULT";
+
+          if (status === 'Leave') {
+            const dur = rawRec.leaveDuration || "Full Day";
+            loggedPtoOnly += (dur === 'Full Day' ? 1 : 0.5);
+          }
+
+          if (isAhi) {
+            if (status === 'WFO' || status === 'WFH') {
+              workedOnHoliday++;
+            }
+          }
+        });
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-200 text-xs";
+        tr.innerHTML = `
+          <td class="p-2.5 font-medium border-r border-slate-200 bg-[#D9EEF7] text-slate-900">${member.name}</td>
+          <td class="p-2.5 text-center font-bold border-r border-slate-200">${loggedPtoOnly}</td>
+          <td class="p-2.5 text-center font-bold border-r border-slate-200">${totalHolidaysCount}</td>
+          <td class="p-2.5 text-center font-bold">${workedOnHoliday}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
+    function exportPtoCSV() {
+      const table = document.getElementById('ptoTable');
+      let csv = [];
+      
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const viewMonthName = monthNames[teamViewingDate.getMonth()];
+      csv.push(`"PTO Report for ${viewMonthName} Month"`);
+      csv.push('');
+
+      for (let i = 0; i < table.rows.length; i++) {
+        let row = [], cols = table.rows[i].querySelectorAll('td, th');
+        for (let j = 0; j < cols.length; j++) {
+          row.push('"' + cols[j].innerText.trim() + '"');
+        }
+        csv.push(row.join(','));
+      }
+
+      const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `AthenaHealth_PTO_Report_${teamViewingDate.getFullYear()}_${teamViewingDate.getMonth() + 1}.csv`;
+      downloadLink.href = window.URL.createObjectURL(csvFile);
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
+    // FINANCE REPORT
     function renderTeamFinanceReport() {
       const team = db.teams.find(t => t.id === selectedTeamId);
       const tbody = document.getElementById('financeTableBody');
@@ -2141,7 +2317,14 @@
       const cycleType = document.getElementById('cycleSelector').value;
       const year = teamViewingDate.getFullYear();
       const month = teamViewingDate.getMonth();
-      const dates = getDateRangeForFinance(year, month, cycleType);
+      const dates = (cycleType === 'finance') ? getFinanceCycleDatesForMonth(year, month) : (() => {
+        const dArr = [];
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+          dArr.push(`${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+        }
+        return dArr;
+      })();
 
       if (cycleType === 'finance') {
         const prevMonthNum = month === 0 ? 12 : month;
