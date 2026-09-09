@@ -241,7 +241,7 @@
         <div class="space-y-2" id="teamsListContainer"></div>
       </section>
 
-      <!-- TAB 2: MEMBERS -->
+      <!-- TAB 2: MEMBERS (WITH UP/DOWN REORDERING) -->
       <section id="viewMembers" class="hidden space-y-4">
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50 flex items-center justify-between">
           <div>
@@ -345,7 +345,7 @@
           <div class="bg-brand-lightPurple/70 border border-brand-borderPurple/50 rounded-xl p-3.5 flex justify-between items-center">
             <div>
               <p class="text-xs text-brand-purple font-bold">Earned Shift Allowance</p>
-              <p class="text-[11px] text-slate-500">Calculated automatically from shift timings and extensions</p>
+              <p class="text-[11px] text-slate-500">Calculated automatically from shift timings, extensions, and permissions</p>
             </div>
             <div class="text-right">
               <span class="text-xl font-bold text-brand-purple" id="totalAllowanceDisplay">₹0</span>
@@ -565,8 +565,25 @@
     </div>
   </div>
 
-  <!-- FIXED LAYER: LEAVE / PERMISSION POPUP PLACED ABOVE TEAM STATUS (z-[70]) -->
-  <div id="attendanceModal" class="fixed inset-0 bg-black/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[70]">
+  <!-- TEAM DAY DETAILS MODAL (TAB 4) LAYERED AT z-50 -->
+  <div id="teamDayModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-2xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex justify-between items-start border-b pb-2">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base" id="teamDayModalTitle">Team Status for Date</h3>
+          <p class="text-xs text-slate-500" id="teamDayModalSubtitle"></p>
+        </div>
+        <button onclick="closeTeamDayModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 space-y-2.5 pr-1" id="teamDayModalContent"></div>
+
+      <button onclick="closeTeamDayModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg text-xs">Done</button>
+    </div>
+  </div>
+
+  <!-- FIXED TOP LAYER: LEAVE / PERMISSION POPUP PLACED ABOVE TEAM STATUS (z-[9999]) -->
+  <div id="attendanceModal" style="z-index: 9999;" class="fixed inset-0 bg-black/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-purple-200">
       <div class="flex justify-between items-start border-b pb-2">
         <div>
@@ -613,8 +630,11 @@
             <option value="1st Half - First 2 Hours">1st Half - First 2 Hours</option>
             <option value="1st Half - Second 2 Hours">1st Half - Second 2 Hours</option>
             <option value="2nd Half - First 2 Hours">2nd Half - First 2 Hours</option>
-            <option value="2nd Half - Second 2 Hours">2nd Half - Second 2 Hours</option>
+            <option value="2nd Half - Second 2 Hours">2nd Half - Second 2 Hours (Shift Allowance: ₹0)</option>
           </select>
+          <p class="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+            Note: Taking permission for <strong>2nd Half - Second 2 Hours</strong> forfeits the shift allowance for this day.
+          </p>
         </div>
       </div>
 
@@ -622,23 +642,6 @@
         <button onclick="saveModalAttendance()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white font-medium py-2.5 rounded-lg shadow-sm">Save & Update</button>
         <button onclick="closeModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2.5 rounded-lg">Cancel</button>
       </div>
-    </div>
-  </div>
-
-  <!-- TEAM DAY DETAILS MODAL (TAB 4) LAYERED AT z-50 -->
-  <div id="teamDayModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-3 sm:p-4 z-50">
-    <div class="bg-white rounded-2xl w-full max-w-2xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
-      <div class="flex justify-between items-start border-b pb-2">
-        <div>
-          <h3 class="font-bold text-slate-800 text-base" id="teamDayModalTitle">Team Status for Date</h3>
-          <p class="text-xs text-slate-500" id="teamDayModalSubtitle"></p>
-        </div>
-        <button onclick="closeTeamDayModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
-      </div>
-
-      <div class="overflow-y-auto flex-1 space-y-2.5 pr-1" id="teamDayModalContent"></div>
-
-      <button onclick="closeTeamDayModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg text-xs">Done</button>
     </div>
   </div>
 
@@ -1339,7 +1342,7 @@
       });
     }
 
-    // MEMBERS CRUD
+    // MEMBERS CRUD & REORDERING
     function addMember() {
       const empId = document.getElementById('newEmpId').value.trim();
       const name = document.getElementById('newMemberName').value.trim();
@@ -1367,6 +1370,23 @@
       document.getElementById('newEmpId').value = '';
       document.getElementById('newMemberName').value = '';
       renderMembers();
+    }
+
+    function moveMember(index, direction, event) {
+      if (event) event.stopPropagation();
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      if (!team || !team.members) return;
+
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= team.members.length) return;
+
+      const temp = team.members[index];
+      team.members[index] = team.members[targetIndex];
+      team.members[targetIndex] = temp;
+
+      saveDB();
+      renderMembers();
+      refreshCurrentViews();
     }
 
     function openEditMemberModal(memberId, event) {
@@ -1415,6 +1435,7 @@
       saveDB();
       closeEditMemberModal();
       renderMembers();
+      refreshCurrentViews();
     }
 
     function selectMember(memberId) {
@@ -1430,6 +1451,7 @@
         if (selectedMemberId === memberId) selectedMemberId = null;
         saveDB();
         renderMembers();
+        refreshCurrentViews();
       }
     }
 
@@ -1448,13 +1470,17 @@
 
       const curMonthKey = `${viewingDate.getFullYear()}-${String(viewingDate.getMonth() + 1).padStart(2, '0')}`;
 
-      team.members.forEach(member => {
+      team.members.forEach((member, idx) => {
         const activeShift = getShiftForMonth(member.id, member.defaultShift, curMonthKey);
         const shiftMeta = getShiftMeta(activeShift);
         const allowanceRate = `₹${shiftMeta.allowance}/day`;
         const card = document.createElement('div');
         card.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center hover:border-brand-borderPurple cursor-pointer transition";
         card.onclick = () => selectMember(member.id);
+        
+        const isFirst = (idx === 0);
+        const isLast = (idx === team.members.length - 1);
+
         card.innerHTML = `
           <div>
             <div class="flex items-center gap-2">
@@ -1464,7 +1490,11 @@
             </div>
             <p class="text-xs text-slate-400 mt-1">${activeShift} &bull; <span class="text-brand-purple font-medium">${allowanceRate}</span></p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5">
+            <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden mr-1">
+              <button onclick="moveMember(${idx}, -1, event)" ${isFirst ? 'disabled' : ''} title="Move Up" class="px-2 py-1 bg-slate-50 hover:bg-brand-lightPurple text-slate-600 hover:text-brand-purple disabled:opacity-30 disabled:hover:bg-slate-50 disabled:cursor-not-allowed border-r border-slate-200 text-xs font-bold transition">▲</button>
+              <button onclick="moveMember(${idx}, 1, event)" ${isLast ? 'disabled' : ''} title="Move Down" class="px-2 py-1 bg-slate-50 hover:bg-brand-lightPurple text-slate-600 hover:text-brand-purple disabled:opacity-30 disabled:hover:bg-slate-50 disabled:cursor-not-allowed text-xs font-bold transition">▼</button>
+            </div>
             <button onclick="openEditMemberModal('${member.id}', event)" class="text-xs font-semibold bg-slate-100 hover:bg-brand-lightPurple text-brand-purple px-2.5 py-1.5 rounded-lg transition border border-slate-200">
               Edit
             </button>
@@ -1735,10 +1765,16 @@
           }
         } else if (effectiveStatus === 'Permission') {
           countPermissions++;
-          totalEarnedAllowance += rateToday;
-          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+          const slot = rawRecord && rawRecord.permissionSlot;
+          const isNoAllowanceSlot = slot && slot.includes('Second 2 Hours') && slot.includes('2nd Half');
+          
+          if (!isNoAllowanceSlot) {
+            totalEarnedAllowance += rateToday;
+            if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+          }
+          
           badgeColor = "bg-amber-50 text-amber-800 border-amber-200";
-          badgeLabel = "P (2h)";
+          badgeLabel = isNoAllowanceSlot ? "P (2h-No ₹)" : "P (2h)";
           if (isOffDay) compOffEarned += 1;
         }
 
@@ -1817,6 +1853,9 @@
     function closeModal() {
       document.getElementById('attendanceModal').classList.add('hidden');
       modalSelectedDateStr = null;
+      if (activeTeamModalDateStr) {
+        openTeamDayDetails(activeTeamModalDateStr);
+      }
     }
 
     function handleModalStatusChange() {
@@ -1849,7 +1888,8 @@
 
       db.records[modalSelectedDateStr][selectedMemberId] = record;
       saveDB();
-      closeModal();
+      document.getElementById('attendanceModal').classList.add('hidden');
+      modalSelectedDateStr = null;
       renderCalendarAndSummary();
       renderTeamCalendarRoster();
       renderTeamFinanceReport();
@@ -2133,8 +2173,15 @@
           }
 
           let eligible = false;
-          if (status === 'WFO' || status === 'WFH' || status === 'Permission' || status === 'Extend Shift') {
+          if (status === 'WFO' || status === 'WFH' || status === 'Extend Shift') {
             eligible = true;
+          } else if (status === 'Permission') {
+            const slot = rawRec && rawRec.permissionSlot;
+            if (slot && slot.includes('Second 2 Hours') && slot.includes('2nd Half')) {
+              eligible = false;
+            } else {
+              eligible = true;
+            }
           } else if (status === 'Leave' && rawRec && rawRec.leaveDuration === 'First Half') {
             eligible = true;
           }
