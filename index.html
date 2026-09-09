@@ -83,7 +83,7 @@
 
   <div class="max-w-4xl mx-auto p-3 sm:p-4">
 
-    <!-- LOGIN & AUTHENTICATION SCREEN -->
+    <!-- LOGIN SCREEN -->
     <section id="authScreen" class="py-8">
       <div class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
         <div class="bg-brand-purple p-6 text-center text-white">
@@ -92,7 +92,6 @@
         </div>
 
         <div class="p-6 space-y-4">
-          <!-- Login View -->
           <div id="loginForm">
             <div class="space-y-3">
               <div>
@@ -127,7 +126,7 @@
             </div>
           </div>
 
-          <!-- First Time PIN Setup View -->
+          <!-- First Time Setup -->
           <div id="setPinForm" class="hidden space-y-3">
             <h3 class="text-xs font-bold uppercase text-brand-purple tracking-wider">Set Initial 4-Digit PIN</h3>
             <div>
@@ -167,7 +166,7 @@
             </div>
           </div>
 
-          <!-- Forgot Password View -->
+          <!-- Forgot Password -->
           <div id="forgotPinForm" class="hidden space-y-3">
             <h3 class="text-xs font-bold uppercase text-brand-purple tracking-wider">Reset 4-Digit PIN</h3>
             <p class="text-[11px] text-slate-500">Provide your registered Employee ID and Name to set a new 4-digit PIN.</p>
@@ -198,10 +197,10 @@
       </div>
     </section>
 
-    <!-- MAIN APP INTERFACE -->
+    <!-- MAIN APP CONTAINER -->
     <div id="appContainer" class="hidden space-y-4">
       
-      <!-- User Status Banner -->
+      <!-- Status Banner -->
       <div class="bg-white rounded-xl p-3 shadow-sm border border-purple-100 flex justify-between items-center">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-brand-green animate-pulse"></span>
@@ -213,7 +212,7 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
+      <!-- Tabs -->
       <nav class="flex border-b border-purple-100 bg-white rounded-xl shadow-sm p-1 overflow-x-auto">
         <button id="tabTeamsBtn" onclick="switchTab('teams')" class="flex-1 min-w-[70px] py-2 text-center text-xs font-semibold rounded-lg text-brand-purple bg-brand-lightPurple transition">
           1. Teams
@@ -293,7 +292,6 @@
             </div>
           </div>
 
-          <!-- Dynamic Shift Buttons for Monthly Override -->
           <div class="bg-brand-lightPurple/60 border border-brand-borderPurple/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span class="text-xs font-bold text-brand-purple block">Default Shift for <span id="currentShiftMonthLabel"></span>:</span>
@@ -303,7 +301,6 @@
           </div>
         </div>
 
-        <!-- Calendar Controls -->
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-50">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
             <div class="flex items-center gap-2">
@@ -339,7 +336,7 @@
           <div id="calendarDaysGrid" class="calendar-grid gap-1"></div>
         </div>
 
-        <!-- Member Consolidated Summary -->
+        <!-- Member Monthly Summary -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-purple-50 space-y-4">
           <h3 class="text-sm font-bold text-brand-purple uppercase tracking-wide border-b border-purple-50 pb-2">
             Member Monthly Summary (<span id="summaryMonthLabel"></span>)
@@ -348,14 +345,13 @@
           <div class="bg-brand-lightPurple/70 border border-brand-borderPurple/50 rounded-xl p-3.5 flex justify-between items-center">
             <div>
               <p class="text-xs text-brand-purple font-bold">Earned Shift Allowance</p>
-              <p class="text-[11px] text-slate-500">Includes base shift allowances and extra shift extensions</p>
+              <p class="text-[11px] text-slate-500">Calculated automatically from shift timings and extensions</p>
             </div>
             <div class="text-right">
               <span class="text-xl font-bold text-brand-purple" id="totalAllowanceDisplay">₹0</span>
             </div>
           </div>
 
-          <!-- Dynamic Shift Counts Grid -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs" id="summaryDynamicShiftsGrid"></div>
 
           <div class="border-t border-purple-50 pt-3 space-y-2 text-xs">
@@ -381,7 +377,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
             <div>
               <h2 class="text-base font-bold text-brand-purple">Team Calendar Roster</h2>
-              <p class="text-xs text-slate-500">Status overview of all team members</p>
+              <p class="text-xs text-slate-500">Click any day below to view and edit team attendance</p>
             </div>
             <div class="flex items-center gap-2">
               <button onclick="navigateTeamMonth(-1)" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-bold">&larr; Prev</button>
@@ -434,7 +430,7 @@
     </div>
   </div>
 
-  <!-- UNIFIED SETTINGS MODAL (GEAR ICON) -->
+  <!-- UNIFIED SETTINGS MODAL -->
   <div id="settingsModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-3 sm:p-4 z-50">
     <div class="bg-white rounded-2xl w-full max-w-xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center border-b border-purple-100 pb-3">
@@ -453,7 +449,6 @@
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
       </div>
 
-      <!-- Settings Tabs Header -->
       <div class="flex border-b border-slate-200 gap-4 text-xs font-semibold">
         <button id="settingsTabCohortsBtn" onclick="switchSettingsTab('cohorts')" class="pb-2 border-b-2 border-brand-purple text-brand-purple">
           Cohort Roles
@@ -463,7 +458,6 @@
         </button>
       </div>
 
-      <!-- 1. Cohorts Setting Panel -->
       <div id="settingsPanelCohorts" class="space-y-3">
         <div class="flex gap-2">
           <input type="text" id="newCohortInput" placeholder="Add Cohort Role" class="border rounded-lg px-3 py-2 text-xs w-full outline-none focus:ring-2 focus:ring-brand-purple">
@@ -475,7 +469,6 @@
         </div>
       </div>
 
-      <!-- 2. Shifts & Allowance Setting Panel -->
       <div id="settingsPanelShifts" class="hidden space-y-4">
         <div class="bg-brand-lightPurple/40 border border-brand-borderPurple/60 p-3.5 rounded-xl space-y-3">
           <h4 class="text-xs font-bold text-brand-purple uppercase tracking-wider">Add Custom Shift</h4>
@@ -572,48 +565,28 @@
     </div>
   </div>
 
-  <!-- SINGLE DAY EDIT MODAL (TAB 3) -->
-  <div id="attendanceModal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+  <!-- FIXED LAYER: LEAVE / PERMISSION POPUP PLACED ABOVE TEAM STATUS (z-[70]) -->
+  <div id="attendanceModal" class="fixed inset-0 bg-black/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[70]">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-purple-200">
       <div class="flex justify-between items-start border-b pb-2">
         <div>
-          <h3 class="font-bold text-slate-800" id="modalDayTitle">Update Day Record</h3>
+          <h3 class="font-bold text-slate-800 text-base" id="modalDayTitle">Update Day Record</h3>
           <p class="text-xs text-slate-500" id="modalDaySubtitle"></p>
-          <p class="text-xs font-semibold text-brand-purple mt-1" id="modalHolidayNotice"></p>
         </div>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
       </div>
 
       <div class="space-y-3 text-sm">
-        <div class="bg-brand-lightPurple/40 p-3 rounded-xl border border-brand-borderPurple/50 space-y-2">
-          <label class="block text-xs font-bold text-brand-purple">Assigned Shift Timing</label>
-          <div class="grid grid-cols-2 gap-2" id="modalDynamicShiftButtons"></div>
-          
-          <!-- Extra Shift / Add-on Allowance Option -->
-          <div class="mt-2 pt-2 border-t border-purple-200/60 flex items-center justify-between">
-            <div>
-              <span class="text-xs font-bold text-slate-800 block">Worked Extended / Extra Timing</span>
-              <span class="text-[11px] text-slate-500">Adds night allowance (₹750) for this day only</span>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="modalExtraShiftToggle" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-purple"></div>
-            </label>
-          </div>
-        </div>
-
         <div>
           <label class="block font-medium mb-1">Attendance Status</label>
           <select id="modalStatusSelect" onchange="handleModalStatusChange()" class="w-full border rounded-lg p-2.5 outline-none bg-white">
             <option value="DEFAULT">Default (Auto-Off for Weekend/Holiday or WFO)</option>
-            <option value="WFO">WFO (Work From Office - Shift Allowance)</option>
-            <option value="WFH" id="modalWfhOption">WFH (Work From Home - Shift Allowance)</option>
+            <option value="WFO">WFO</option>
+            <option value="WFH">WFH</option>
             <option value="Leave">Leave</option>
             <option value="Permission">Permission (2 Hours)</option>
+            <option value="Extend Shift">Extend Shift (Night Allowance)</option>
           </select>
-          <p class="text-[11px] text-brand-green mt-1 hidden font-medium" id="compOffAlert">
-            &#9733; Working on this weekend/AHI holiday earns <strong>Shift Allowance + 1 Comp Off Leave</strong>!
-          </p>
         </div>
 
         <div id="modalLeaveSection" class="hidden space-y-2">
@@ -635,7 +608,7 @@
 
         <!-- 4 Granular Permission Slots -->
         <div id="modalPermissionSection" class="hidden space-y-2">
-          <label class="block font-medium">Permission Slot (2 Hours)</label>
+          <label class="block font-medium">Permission Timing (2 Hours)</label>
           <select id="modalPermissionSlot" class="w-full border rounded-lg p-2.5 outline-none bg-white text-xs">
             <option value="1st Half - First 2 Hours">1st Half - First 2 Hours</option>
             <option value="1st Half - Second 2 Hours">1st Half - Second 2 Hours</option>
@@ -646,15 +619,15 @@
       </div>
 
       <div class="flex gap-2 pt-2">
-        <button onclick="saveModalAttendance()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white font-medium py-2.5 rounded-lg shadow-sm">Save Record</button>
+        <button onclick="saveModalAttendance()" class="w-full bg-brand-purple hover:bg-brand-darkPurple text-white font-medium py-2.5 rounded-lg shadow-sm">Save & Update</button>
         <button onclick="closeModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2.5 rounded-lg">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- TEAM DAY DETAILS MODAL (TAB 4) -->
-  <div id="teamDayModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl w-full max-w-lg p-5 space-y-4 max-h-[85vh] flex flex-col">
+  <!-- TEAM DAY DETAILS MODAL (TAB 4) LAYERED AT z-50 -->
+  <div id="teamDayModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-2xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
       <div class="flex justify-between items-start border-b pb-2">
         <div>
           <h3 class="font-bold text-slate-800 text-base" id="teamDayModalTitle">Team Status for Date</h3>
@@ -662,8 +635,10 @@
         </div>
         <button onclick="closeTeamDayModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
       </div>
-      <div class="overflow-y-auto flex-1 space-y-2" id="teamDayModalContent"></div>
-      <button onclick="closeTeamDayModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg text-xs">Close</button>
+
+      <div class="overflow-y-auto flex-1 space-y-2.5 pr-1" id="teamDayModalContent"></div>
+
+      <button onclick="closeTeamDayModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg text-xs">Done</button>
     </div>
   </div>
 
@@ -696,7 +671,6 @@
       "2026-12-25": "Christmas Day"
     };
 
-    // Default System State
     let db = {
       teams: [
         { id: "team_1", name: "Public Health", members: [] }
@@ -715,13 +689,12 @@
     let selectedMemberId = null;
     let viewingDate = new Date(2026, 8, 1);
     let modalSelectedDateStr = null;
-    let modalSelectedShift = "Evening Shift";
+    let activeTeamModalDateStr = null;
 
     let isBulkMode = false;
     let selectedDatesSet = new Set();
     let currentUser = null;
 
-    // Local Storage Loading
     const LOCAL_KEY = 'athena_attendance_v8_data';
     const localSaved = localStorage.getItem(LOCAL_KEY);
     if (localSaved) {
@@ -740,9 +713,7 @@
       }
     }
 
-    // ==========================================================
-    // CONFIGURED FIREBASE SETTINGS
-    // ==========================================================
+    // Firebase
     let dbRef = null;
     try {
       const firebaseConfig = {
@@ -776,7 +747,6 @@
           renderShiftsConfigList();
           refreshCurrentViews();
         } else {
-          // Push local cache up if cloud is empty
           if (db.teams && db.teams.some(t => t.members && t.members.length > 0)) {
             dbRef.set(db);
           }
@@ -793,7 +763,6 @@
       }
     }
 
-    // Show / Hide Password function
     function togglePinVisibility(inputId, btn) {
       const input = document.getElementById(inputId);
       if (input.type === "password") {
@@ -811,9 +780,7 @@
       return found || db.shifts[0] || { allowance: 550, start: "3:30 PM", end: "12:30 AM" };
     }
 
-    // ==========================================
-    // UNIFIED GEAR SETTINGS MODAL
-    // ==========================================
+    // SETTINGS
     function openSettingsModal() {
       document.getElementById('settingsModal').classList.remove('hidden');
       switchSettingsTab('cohorts');
@@ -855,10 +822,7 @@
       db.cohorts.forEach((cohort, idx) => {
         const badge = document.createElement('span');
         badge.className = "inline-flex items-center gap-1.5 bg-white text-brand-purple text-xs px-2.5 py-1 rounded-lg border border-purple-200 font-semibold shadow-sm";
-        badge.innerHTML = `
-          ${cohort}
-          <button onclick="removeCohort(${idx})" class="text-slate-400 hover:text-rose-600 font-bold ml-1">&times;</button>
-        `;
+        badge.innerHTML = `${cohort} <button onclick="removeCohort(${idx})" class="text-slate-400 hover:text-rose-600 font-bold ml-1">&times;</button>`;
         container.appendChild(badge);
       });
       populateAllDropdowns();
@@ -1013,9 +977,7 @@
       });
     }
 
-    // ==========================================
-    // AUTHENTICATION LOGIC
-    // ==========================================
+    // AUTH
     function checkLocalSession() {
       populateAllDropdowns();
       const savedUser = sessionStorage.getItem('athena_auth_user');
@@ -1220,9 +1182,7 @@
       showAuthScreen();
     }
 
-    // ==========================================
-    // TAB MANAGEMENT & VIEWS
-    // ==========================================
+    // TABS
     function refreshCurrentViews() {
       const curTeam = db.teams.find(t => t.id === selectedTeamId);
       document.getElementById('activeTeamBadge').innerText = curTeam ? curTeam.name : "No Team Selected";
@@ -1295,9 +1255,7 @@
       }
     }
 
-    // ==========================================
     // TEAMS CRUD
-    // ==========================================
     function createTeam() {
       const input = document.getElementById('newTeamInput');
       const name = input.value.trim();
@@ -1381,9 +1339,7 @@
       });
     }
 
-    // ==========================================
     // MEMBERS CRUD
-    // ==========================================
     function addMember() {
       const empId = document.getElementById('newEmpId').value.trim();
       const name = document.getElementById('newMemberName').value.trim();
@@ -1519,9 +1475,7 @@
       });
     }
 
-    // ==========================================
-    // TAB 3: CALENDAR & MEMBER VIEW
-    // ==========================================
+    // CALENDAR LOGIC
     function isWeekend(dateKey) {
       const d = new Date(dateKey + 'T00:00:00');
       const day = d.getDay();
@@ -1575,7 +1529,7 @@
         document.getElementById('selectedCountBadge').innerText = `${selectedDatesSet.size} days selected`;
         renderCalendarAndSummary();
       } else {
-        openDayModal(dateStr, memberName, record, ahiHoliday, usHoliday, weekend, currentShift);
+        openDayModal(dateStr, memberName, record);
       }
     }
 
@@ -1593,8 +1547,7 @@
         if (!db.records[dateStr]) db.records[dateStr] = {};
         db.records[dateStr][selectedMemberId] = {
           status: status,
-          shift: defaultShift,
-          isExtraShift: false
+          shift: defaultShift
         };
       });
 
@@ -1714,15 +1667,6 @@
 
         const rawRecord = (db.records && db.records[dateKey] && db.records[dateKey][member.id]);
         let shiftToday = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
-        const isExtra = rawRecord && rawRecord.isExtraShift;
-
-        // If extra shift timing is active, compute as Night Shift rate
-        if (isExtra) {
-          shiftToday = "Night Shift";
-        }
-
-        const shiftMeta = getShiftMeta(shiftToday);
-        const rateToday = shiftMeta.allowance;
 
         let effectiveStatus = "OFF";
         if (rawRecord && rawRecord.status !== 'DEFAULT') {
@@ -1730,6 +1674,13 @@
         } else {
           effectiveStatus = isOffDay ? "OFF" : "WFO";
         }
+
+        if (effectiveStatus === 'Extend Shift') {
+          shiftToday = "Night Shift";
+        }
+
+        const shiftMeta = getShiftMeta(shiftToday);
+        const rateToday = shiftMeta.allowance;
 
         let badgeColor = "bg-white text-slate-700 border-slate-200";
         let badgeLabel = "";
@@ -1747,7 +1698,7 @@
           if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
           
           badgeColor = "bg-brand-lightGreen text-brand-darkGreen border-brand-green/30";
-          badgeLabel = `WFO (${shiftToday.split(' ')[0]}${isExtra ? ' +Ext' : ''})`;
+          badgeLabel = `WFO (${shiftToday.split(' ')[0]})`;
           if (isOffDay) {
             compOffEarned += 1;
             badgeLabel += " +Comp";
@@ -1758,7 +1709,16 @@
           if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
 
           badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
-          badgeLabel = `WFH (${shiftToday.split(' ')[0]}${isExtra ? ' +Ext' : ''})`;
+          badgeLabel = `WFH (${shiftToday.split(' ')[0]})`;
+          if (isOffDay) {
+            compOffEarned += 1;
+            badgeLabel += " +Comp";
+          }
+        } else if (effectiveStatus === 'Extend Shift') {
+          totalEarnedAllowance += rateToday;
+          if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
+          badgeColor = "bg-purple-100 text-brand-purple border-purple-300 font-bold";
+          badgeLabel = `Ext Shift (₹${rateToday})`;
           if (isOffDay) {
             compOffEarned += 1;
             badgeLabel += " +Comp";
@@ -1838,49 +1798,11 @@
       document.getElementById('grandTotalLeavesDisplay').innerText = `${grandTotalLeaves} Day(s)`;
     }
 
-    // MODAL DIALOG
-    function openDayModal(dateStr, memberName, record, ahiHoliday, usHoliday, weekend, currentShift) {
+    // LEAVE / PERMISSION POPUP
+    function openDayModal(dateStr, memberName, record) {
       modalSelectedDateStr = dateStr;
-      modalSelectedShift = (record && record.shift) ? record.shift : currentShift;
-
       document.getElementById('modalDayTitle').innerText = `${dateStr}`;
       document.getElementById('modalDaySubtitle').innerText = `Member: ${memberName}`;
-
-      let notices = [];
-      if (ahiHoliday) notices.push(`AHI Holiday: ${ahiHoliday}`);
-      if (usHoliday) notices.push(`US Holiday: ${usHoliday}`);
-      if (weekend) notices.push(`Weekend Off`);
-      document.getElementById('modalHolidayNotice').innerHTML = notices.join(' &bull; ');
-
-      const isOff = weekend || !!ahiHoliday;
-      document.getElementById('compOffAlert').classList.toggle('hidden', !isOff);
-
-      const wfhOpt = document.getElementById('modalWfhOption');
-      if (isOff) {
-        wfhOpt.innerText = "WFH (Shift Allowance & Comp Off Earned)";
-      } else {
-        wfhOpt.innerText = "WFH (Work From Home - Shift Allowance)";
-      }
-
-      // Populate Shifts
-      const modalShiftBtnsContainer = document.getElementById('modalDynamicShiftButtons');
-      modalShiftBtnsContainer.innerHTML = '';
-      if (!db.shifts) db.shifts = [];
-
-      db.shifts.forEach(s => {
-        const isSelected = (modalSelectedShift === s.name);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.onclick = () => setModalShift(s.name);
-        btn.className = isSelected 
-          ? "py-2 px-2 text-xs font-semibold rounded-lg border-2 border-brand-purple bg-brand-lightPurple text-brand-purple shadow-sm"
-          : "py-2 px-2 text-xs font-semibold rounded-lg border border-slate-300 bg-white text-slate-600";
-        btn.innerHTML = `${s.name}<br><span class="text-[10px] text-slate-400">₹${s.allowance}/day (${s.start})</span>`;
-        modalShiftBtnsContainer.appendChild(btn);
-      });
-
-      // Extra Shift Toggle
-      document.getElementById('modalExtraShiftToggle').checked = Boolean(record && record.isExtraShift);
 
       const status = record ? record.status : "DEFAULT";
       document.getElementById('modalStatusSelect').value = status;
@@ -1890,18 +1812,6 @@
 
       handleModalStatusChange();
       document.getElementById('attendanceModal').classList.remove('hidden');
-    }
-
-    function setModalShift(shiftName) {
-      modalSelectedShift = shiftName;
-      const buttons = document.getElementById('modalDynamicShiftButtons').querySelectorAll('button');
-      db.shifts.forEach((s, idx) => {
-        if (buttons[idx]) {
-          buttons[idx].className = (s.name === shiftName)
-            ? "py-2 px-2 text-xs font-semibold rounded-lg border-2 border-brand-purple bg-brand-lightPurple text-brand-purple shadow-sm"
-            : "py-2 px-2 text-xs font-semibold rounded-lg border border-slate-300 bg-white text-slate-600";
-        }
-      });
     }
 
     function closeModal() {
@@ -1921,12 +1831,13 @@
       if (!db.records[modalSelectedDateStr]) db.records[modalSelectedDateStr] = {};
 
       const status = document.getElementById('modalStatusSelect').value;
-      const isExtraShift = document.getElementById('modalExtraShiftToggle').checked;
+      const curRec = db.records[modalSelectedDateStr][selectedMemberId] || {};
+      const currentShift = curRec.shift || getDayShift(modalSelectedDateStr, selectedMemberId, "Evening Shift", modalSelectedDateStr.slice(0, 7));
 
       const record = { 
+        ...curRec,
         status,
-        shift: modalSelectedShift,
-        isExtraShift: isExtraShift
+        shift: status === 'Extend Shift' ? 'Night Shift' : currentShift
       };
 
       if (status === 'Leave') {
@@ -1940,11 +1851,15 @@
       saveDB();
       closeModal();
       renderCalendarAndSummary();
+      renderTeamCalendarRoster();
+      renderTeamFinanceReport();
+
+      if (activeTeamModalDateStr) {
+        openTeamDayDetails(activeTeamModalDateStr);
+      }
     }
 
-    // ==========================================
     // TAB 4: TEAM ROSTER & FINANCE TABLE
-    // ==========================================
     let teamViewingDate = new Date(2026, 8, 1);
 
     function navigateTeamMonth(delta) {
@@ -1982,6 +1897,7 @@
         let leaveCount = 0;
         let permCount = 0;
         let wfhCount = 0;
+        let extCount = 0;
 
         if (team && team.members && db.records && db.records[dateKey]) {
           team.members.forEach(m => {
@@ -1990,6 +1906,7 @@
               if (rec.status === 'Leave') leaveCount++;
               if (rec.status === 'Permission') permCount++;
               if (rec.status === 'WFH') wfhCount++;
+              if (rec.status === 'Extend Shift') extCount++;
             }
           });
         }
@@ -2002,6 +1919,7 @@
         if (leaveCount > 0) badgeRow += `<span class="bg-rose-100 text-rose-800 text-[9px] px-1 rounded font-bold">${leaveCount}L</span>`;
         if (permCount > 0) badgeRow += `<span class="bg-amber-100 text-amber-800 text-[9px] px-1 rounded font-bold">${permCount}P</span>`;
         if (wfhCount > 0) badgeRow += `<span class="bg-blue-100 text-blue-800 text-[9px] px-1 rounded font-bold">${wfhCount}WFH</span>`;
+        if (extCount > 0) badgeRow += `<span class="bg-purple-100 text-brand-purple text-[9px] px-1 rounded font-bold">${extCount}Ext</span>`;
 
         cell.innerHTML = `
           <div class="flex justify-between items-center">
@@ -2014,7 +1932,65 @@
       }
     }
 
+    function updateInlineAttendanceStatus(memberId, dateKey, status) {
+      if (status === 'Leave' || status === 'Permission') {
+        selectedMemberId = memberId;
+        const team = db.teams.find(t => t.id === selectedTeamId);
+        const member = team ? team.members.find(m => m.id === memberId) : null;
+        const rawRec = db.records && db.records[dateKey] && db.records[dateKey][memberId];
+        openDayModal(dateKey, member ? member.name : memberId, rawRec);
+        document.getElementById('modalStatusSelect').value = status;
+        handleModalStatusChange();
+        return;
+      }
+
+      if (!db.records) db.records = {};
+      if (!db.records[dateKey]) db.records[dateKey] = {};
+
+      const currentRec = db.records[dateKey][memberId] || {};
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      const member = team ? team.members.find(m => m.id === memberId) : null;
+      const curShift = currentRec.shift || (member ? getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7)) : "Evening Shift");
+
+      db.records[dateKey][memberId] = {
+        ...currentRec,
+        status: status,
+        shift: status === 'Extend Shift' ? 'Night Shift' : curShift
+      };
+
+      saveDB();
+      renderTeamCalendarRoster();
+      renderTeamFinanceReport();
+      renderCalendarAndSummary();
+      openTeamDayDetails(dateKey);
+    }
+
+    function toggleInlineShift(memberId, dateKey) {
+      if (!db.records) db.records = {};
+      if (!db.records[dateKey]) db.records[dateKey] = {};
+
+      const currentRec = db.records[dateKey][memberId] || {};
+      const team = db.teams.find(t => t.id === selectedTeamId);
+      const member = team ? team.members.find(m => m.id === memberId) : null;
+      const curShift = currentRec.shift || (member ? getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7)) : "Evening Shift");
+
+      const nextShift = curShift === 'Night Shift' ? 'Evening Shift' : 'Night Shift';
+
+      db.records[dateKey][memberId] = {
+        ...currentRec,
+        status: currentRec.status || 'WFO',
+        shift: nextShift
+      };
+
+      saveDB();
+      renderTeamCalendarRoster();
+      renderTeamFinanceReport();
+      renderCalendarAndSummary();
+      openTeamDayDetails(dateKey);
+    }
+
     function openTeamDayDetails(dateKey) {
+      activeTeamModalDateStr = dateKey;
       const team = db.teams.find(t => t.id === selectedTeamId);
       if (!team) return;
 
@@ -2031,32 +2007,52 @@
 
       (team.members || []).forEach(member => {
         const monthKey = dateKey.slice(0, 7);
-        let shift = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
         const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
-        if (rawRec && rawRec.isExtraShift) {
-          shift = "Night Shift (Extra Hours)";
-        }
         
-        let statusTag = '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO</span>';
-        if (isWeekend(dateKey) || ahi) {
-          statusTag = '<span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full font-semibold">Scheduled Off</span>';
+        let shift = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
+        let status = rawRec && rawRec.status ? rawRec.status : (isWeekend(dateKey) || ahi ? "DEFAULT" : "WFO");
+        
+        if (status === 'Extend Shift') {
+          shift = 'Night Shift';
         }
 
-        if (rawRec) {
-          if (rawRec.status === 'WFO') statusTag = (isWeekend(dateKey) || ahi) ? '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO (Allowance + Comp)</span>' : '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO</span>';
-          if (rawRec.status === 'WFH') statusTag = (isWeekend(dateKey) || ahi) ? '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-semibold">WFH (Allowance + Comp)</span>' : '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-semibold">WFH (Allowance)</span>';
-          if (rawRec.status === 'Leave') statusTag = `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full font-semibold">Leave (${rawRec.leaveCategory || 'Full'})</span>`;
-          if (rawRec.status === 'Permission') statusTag = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold">Permission (${rawRec.permissionSlot || '2h'})</span>`;
-        }
+        const isNight = (shift === 'Night Shift');
 
         const row = document.createElement('div');
-        row.className = "flex justify-between items-center p-2.5 bg-slate-50 rounded-xl text-xs";
+        row.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-slate-50 border border-slate-200 rounded-xl gap-2";
+
         row.innerHTML = `
-          <div>
-            <span class="font-bold text-slate-800 block">${member.name} (${member.empId || 'N/A'})</span>
-            <span class="text-slate-400 text-[11px]">${member.cohort || 'Analyst'} &bull; ${shift}</span>
+          <div class="flex-1">
+            <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              ${member.name}
+              <span class="text-xs font-mono text-slate-500 font-normal">(${member.empId || 'N/A'})</span>
+            </span>
+            <span class="text-slate-400 text-[11px]">${member.cohort || 'Analyst'}</span>
           </div>
-          <div>${statusTag}</div>
+
+          <div class="flex items-center gap-2 flex-wrap self-end sm:self-center">
+            <!-- Shift Toggle Pill Button -->
+            <button onclick="toggleInlineShift('${member.id}', '${dateKey}')" 
+              class="px-2.5 py-1 text-xs font-semibold rounded-lg border transition flex items-center gap-1 shadow-sm ${
+                isNight 
+                  ? 'bg-amber-100 text-amber-900 border-amber-300' 
+                  : 'bg-purple-100 text-brand-purple border-purple-200'
+              }">
+              <span>&#x21C4;</span> 
+              <span>${shift}</span>
+            </button>
+
+            <!-- Status Dropdown -->
+            <select onchange="updateInlineAttendanceStatus('${member.id}', '${dateKey}', this.value)" 
+              class="text-xs font-semibold rounded-lg px-2.5 py-1 outline-none border bg-white border-slate-300 text-slate-700 shadow-sm focus:ring-1 focus:ring-brand-purple">
+              <option value="DEFAULT" ${status === 'DEFAULT' ? 'selected' : ''}>Default (Auto)</option>
+              <option value="WFO" ${status === 'WFO' ? 'selected' : ''}>WFO</option>
+              <option value="WFH" ${status === 'WFH' ? 'selected' : ''}>WFH</option>
+              <option value="Leave" ${status === 'Leave' ? 'selected' : ''}>Leave</option>
+              <option value="Permission" ${status === 'Permission' ? 'selected' : ''}>Permission</option>
+              <option value="Extend Shift" ${status === 'Extend Shift' ? 'selected' : ''}>Extend Shift</option>
+            </select>
+          </div>
         `;
         container.appendChild(row);
       });
@@ -2066,6 +2062,7 @@
 
     function closeTeamDayModal() {
       document.getElementById('teamDayModal').classList.add('hidden');
+      activeTeamModalDateStr = null;
     }
 
     function getDateRangeForFinance(viewYear, viewMonth, cycleType) {
@@ -2126,18 +2123,17 @@
           const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
           let shiftToday = getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7));
 
-          // If extra shift timing is active, credit it as Night Shift
-          if (rawRec && rawRec.isExtraShift) {
-            shiftToday = "Night Shift";
-          }
-
           let status = isOffDay ? "OFF" : "WFO";
           if (rawRec && rawRec.status && rawRec.status !== 'DEFAULT') {
             status = rawRec.status;
           }
 
+          if (status === 'Extend Shift') {
+            shiftToday = "Night Shift";
+          }
+
           let eligible = false;
-          if (status === 'WFO' || status === 'WFH' || status === 'Permission') {
+          if (status === 'WFO' || status === 'WFH' || status === 'Permission' || status === 'Extend Shift') {
             eligible = true;
           } else if (status === 'Leave' && rawRec && rawRec.leaveDuration === 'First Half') {
             eligible = true;
@@ -2196,7 +2192,6 @@
       document.body.removeChild(downloadLink);
     }
 
-    // Run Auth & App Initialization
     checkLocalSession();
   </script>
 </body>
