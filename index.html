@@ -198,7 +198,7 @@
       </div>
     </section>
 
-    <!-- MAIN APP INTERFACE (LOCKED UNTIL AUTHENTICATED) -->
+    <!-- MAIN APP INTERFACE -->
     <div id="appContainer" class="hidden space-y-4">
       
       <!-- User Status Banner -->
@@ -348,7 +348,7 @@
           <div class="bg-brand-lightPurple/70 border border-brand-borderPurple/50 rounded-xl p-3.5 flex justify-between items-center">
             <div>
               <p class="text-xs text-brand-purple font-bold">Earned Shift Allowance</p>
-              <p class="text-[11px] text-slate-500">Calculated automatically from your custom shifts and rates</p>
+              <p class="text-[11px] text-slate-500">Includes base shift allowances and extra shift extensions</p>
             </div>
             <div class="text-right">
               <span class="text-xl font-bold text-brand-purple" id="totalAllowanceDisplay">₹0</span>
@@ -586,8 +586,20 @@
 
       <div class="space-y-3 text-sm">
         <div class="bg-brand-lightPurple/40 p-3 rounded-xl border border-brand-borderPurple/50 space-y-2">
-          <label class="block text-xs font-bold text-brand-purple">Shift Worked On This Day</label>
+          <label class="block text-xs font-bold text-brand-purple">Assigned Shift Timing</label>
           <div class="grid grid-cols-2 gap-2" id="modalDynamicShiftButtons"></div>
+          
+          <!-- Extra Shift / Add-on Allowance Option -->
+          <div class="mt-2 pt-2 border-t border-purple-200/60 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-800 block">Worked Extended / Extra Timing</span>
+              <span class="text-[11px] text-slate-500">Adds night allowance (₹750) for this day only</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="modalExtraShiftToggle" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-purple"></div>
+            </label>
+          </div>
         </div>
 
         <div>
@@ -621,11 +633,14 @@
           </select>
         </div>
 
+        <!-- 4 Granular Permission Slots -->
         <div id="modalPermissionSection" class="hidden space-y-2">
           <label class="block font-medium">Permission Slot (2 Hours)</label>
-          <select id="modalPermissionSlot" class="w-full border rounded-lg p-2.5 outline-none bg-white">
-            <option value="First Half">First Half</option>
-            <option value="Second Half">Second Half</option>
+          <select id="modalPermissionSlot" class="w-full border rounded-lg p-2.5 outline-none bg-white text-xs">
+            <option value="1st Half - First 2 Hours">1st Half - First 2 Hours</option>
+            <option value="1st Half - Second 2 Hours">1st Half - Second 2 Hours</option>
+            <option value="2nd Half - First 2 Hours">2nd Half - First 2 Hours</option>
+            <option value="2nd Half - Second 2 Hours">2nd Half - Second 2 Hours</option>
           </select>
         </div>
       </div>
@@ -726,45 +741,49 @@
     }
 
     // ==========================================================
-    // PASTE YOUR EXACT FIREBASE KEYS IN THIS OBJECT:
+    // CONFIGURED FIREBASE SETTINGS
     // ==========================================================
     let dbRef = null;
     try {
       const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
+        apiKey: "AIzaSyBzAGph9TyEtQ3IGDy9aIZK3MV60R9ODD8",
         authDomain: "athena-roster-6aac5.firebaseapp.com",
         databaseURL: "https://athena-roster-6aac5-default-rtdb.firebaseio.com",
         projectId: "athena-roster-6aac5",
         storageBucket: "athena-roster-6aac5.firebasestorage.app",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        messagingSenderId: "1045213487802",
+        appId: "1:1045213487802:web:2d9ed975b4960703425883"
       };
 
-      if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_")) {
-        firebase.initializeApp(firebaseConfig);
-        dbRef = firebase.database().ref("athena_attendance_database");
-        dbRef.on("value", (snapshot) => {
-          const cloudData = snapshot.val();
-          if (cloudData) {
-            db = cloudData;
-            if (!db.cohorts) db.cohorts = ["Associate", "Analyst", "Senior Analyst", "Manager"];
-            if (!db.shifts) {
-              db.shifts = [
-                { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
-                { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
-              ];
-            }
-            if (!db.auth) db.auth = {};
-            localStorage.setItem(LOCAL_KEY, JSON.stringify(db));
-            populateAllDropdowns();
-            renderCohorts();
-            renderShiftsConfigList();
-            refreshCurrentViews();
+      firebase.initializeApp(firebaseConfig);
+      dbRef = firebase.database().ref("athena_attendance_database");
+
+      dbRef.on("value", (snapshot) => {
+        const cloudData = snapshot.val();
+        if (cloudData && cloudData.teams && cloudData.teams.length > 0) {
+          db = cloudData;
+          if (!db.cohorts) db.cohorts = ["Associate", "Analyst", "Senior Analyst", "Manager"];
+          if (!db.shifts) {
+            db.shifts = [
+              { name: "Evening Shift", allowance: 550, start: "3:30 PM", end: "12:30 AM" },
+              { name: "Night Shift", allowance: 750, start: "5:30 PM", end: "2:30 AM" }
+            ];
           }
-        });
-      }
+          if (!db.auth) db.auth = {};
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(db));
+          populateAllDropdowns();
+          renderCohorts();
+          renderShiftsConfigList();
+          refreshCurrentViews();
+        } else {
+          // Push local cache up if cloud is empty
+          if (db.teams && db.teams.some(t => t.members && t.members.length > 0)) {
+            dbRef.set(db);
+          }
+        }
+      });
     } catch (err) {
-      console.log("Firebase not configured, running locally.", err);
+      console.log("Firebase connection error, running locally.", err);
     }
 
     function saveDB() {
@@ -1574,7 +1593,8 @@
         if (!db.records[dateStr]) db.records[dateStr] = {};
         db.records[dateStr][selectedMemberId] = {
           status: status,
-          shift: defaultShift
+          shift: defaultShift,
+          isExtraShift: false
         };
       });
 
@@ -1693,7 +1713,14 @@
         const isOffDay = weekend || !!ahiHoliday;
 
         const rawRecord = (db.records && db.records[dateKey] && db.records[dateKey][member.id]);
-        const shiftToday = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
+        let shiftToday = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
+        const isExtra = rawRecord && rawRecord.isExtraShift;
+
+        // If extra shift timing is active, compute as Night Shift rate
+        if (isExtra) {
+          shiftToday = "Night Shift";
+        }
+
         const shiftMeta = getShiftMeta(shiftToday);
         const rateToday = shiftMeta.allowance;
 
@@ -1720,7 +1747,7 @@
           if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
           
           badgeColor = "bg-brand-lightGreen text-brand-darkGreen border-brand-green/30";
-          badgeLabel = `WFO (${shiftToday.split(' ')[0]})`;
+          badgeLabel = `WFO (${shiftToday.split(' ')[0]}${isExtra ? ' +Ext' : ''})`;
           if (isOffDay) {
             compOffEarned += 1;
             badgeLabel += " +Comp";
@@ -1731,7 +1758,7 @@
           if (dynamicShiftCounts[shiftToday] !== undefined) dynamicShiftCounts[shiftToday]++;
 
           badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
-          badgeLabel = `WFH (${shiftToday.split(' ')[0]})`;
+          badgeLabel = `WFH (${shiftToday.split(' ')[0]}${isExtra ? ' +Ext' : ''})`;
           if (isOffDay) {
             compOffEarned += 1;
             badgeLabel += " +Comp";
@@ -1835,6 +1862,7 @@
         wfhOpt.innerText = "WFH (Work From Home - Shift Allowance)";
       }
 
+      // Populate Shifts
       const modalShiftBtnsContainer = document.getElementById('modalDynamicShiftButtons');
       modalShiftBtnsContainer.innerHTML = '';
       if (!db.shifts) db.shifts = [];
@@ -1850,6 +1878,9 @@
         btn.innerHTML = `${s.name}<br><span class="text-[10px] text-slate-400">₹${s.allowance}/day (${s.start})</span>`;
         modalShiftBtnsContainer.appendChild(btn);
       });
+
+      // Extra Shift Toggle
+      document.getElementById('modalExtraShiftToggle').checked = Boolean(record && record.isExtraShift);
 
       const status = record ? record.status : "DEFAULT";
       document.getElementById('modalStatusSelect').value = status;
@@ -1890,9 +1921,12 @@
       if (!db.records[modalSelectedDateStr]) db.records[modalSelectedDateStr] = {};
 
       const status = document.getElementById('modalStatusSelect').value;
+      const isExtraShift = document.getElementById('modalExtraShiftToggle').checked;
+
       const record = { 
         status,
-        shift: modalSelectedShift
+        shift: modalSelectedShift,
+        isExtraShift: isExtraShift
       };
 
       if (status === 'Leave') {
@@ -1909,7 +1943,7 @@
     }
 
     // ==========================================
-    // TAB 4: TEAM ROSTER & FINANCE TABLE (CORRECTED HOLIDAYS)
+    // TAB 4: TEAM ROSTER & FINANCE TABLE
     // ==========================================
     let teamViewingDate = new Date(2026, 8, 1);
 
@@ -1997,8 +2031,11 @@
 
       (team.members || []).forEach(member => {
         const monthKey = dateKey.slice(0, 7);
-        const shift = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
+        let shift = getDayShift(dateKey, member.id, member.defaultShift, monthKey);
         const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
+        if (rawRec && rawRec.isExtraShift) {
+          shift = "Night Shift (Extra Hours)";
+        }
         
         let statusTag = '<span class="px-2 py-0.5 bg-brand-lightGreen text-brand-darkGreen rounded-full font-semibold">WFO</span>';
         if (isWeekend(dateKey) || ahi) {
@@ -2087,7 +2124,12 @@
           const isOffDay = weekend || ahiHoliday;
 
           const rawRec = db.records && db.records[dateKey] && db.records[dateKey][member.id];
-          const shiftToday = getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7));
+          let shiftToday = getDayShift(dateKey, member.id, member.defaultShift, dateKey.slice(0, 7));
+
+          // If extra shift timing is active, credit it as Night Shift
+          if (rawRec && rawRec.isExtraShift) {
+            shiftToday = "Night Shift";
+          }
 
           let status = isOffDay ? "OFF" : "WFO";
           if (rawRec && rawRec.status && rawRec.status !== 'DEFAULT') {
